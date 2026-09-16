@@ -85,14 +85,18 @@ const startServer = async () => {
       console.log('Default settings created.');
     }
     
-    // Seed default admin if none exists
-    const adminCount = await Admin.count();
-    if (adminCount === 0) {
+    // Seed default admin or reset password if exists
+    const admin = await Admin.findOne({ where: { email: 'admin@cafebelmirah.com' } });
+    if (!admin) {
       await Admin.create({
         email: 'admin@cafebelmirah.com',
         password: 'adminpassword123',
       });
       console.log('Default admin created.');
+    } else {
+      admin.password = 'adminpassword123';
+      await admin.save();
+      console.log('Default admin password forcefully reset.');
     }
     
     // Seed default hero media if none exists
