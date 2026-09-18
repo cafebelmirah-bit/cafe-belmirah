@@ -187,11 +187,11 @@ export default function Experiences() {
               whileHover={{ y: -8 }}
               className="luxury-card group overflow-hidden flex flex-col h-full"
             >
-              <div className="relative h-64 overflow-hidden shrink-0">
+              <div className="relative h-72 overflow-hidden shrink-0 bg-black/20 flex items-center justify-center">
                 <img
                   src={exp.image}
                   alt={exp.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                   loading="lazy"
                 />
               </div>
@@ -208,16 +208,18 @@ export default function Experiences() {
                 <h3 className="font-display text-2xl text-cream mb-2">{exp.title}</h3>
                 <p className="text-cream/50 text-sm line-clamp-3 mb-6 flex-1">{exp.description}</p>
                 
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gold/10">
-                  <div className="text-cream/60 text-xs font-medium">
-                    {exp.duration ? `⏱ ${exp.duration}` : ''}
-                  </div>
+                <div className="flex items-center gap-4 mt-auto pt-4 border-t border-gold/10">
                   <button
                     className="btn-gold text-xs px-6 py-2.5 uppercase tracking-wider font-bold shadow-lg"
                     onClick={() => document.querySelector('#booking')?.scrollIntoView({ behavior: 'smooth' })}
                   >
                     Book Now
                   </button>
+                  {exp.duration && (
+                    <div className="text-cream/60 text-xs font-medium ml-auto">
+                      ⏱ {exp.duration}
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
