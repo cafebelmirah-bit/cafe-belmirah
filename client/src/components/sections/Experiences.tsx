@@ -185,39 +185,39 @@ export default function Experiences() {
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: i * 0.15 }}
               whileHover={{ y: -8 }}
-              className="luxury-card group overflow-hidden relative"
+              className="luxury-card group overflow-hidden flex flex-col h-full"
             >
-              <div className="relative h-80 overflow-hidden">
+              <div className="relative h-64 overflow-hidden shrink-0">
                 <img
                   src={exp.image}
                   alt={exp.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   loading="lazy"
                 />
+              </div>
 
-                {/* Content overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex flex-col items-start">
-                  <div className="flex items-center gap-2 mb-2">
-                    {exp.icon && <span className="text-2xl">{exp.icon}</span>}
-                    {exp.category && (
-                      <span className={`text-xs font-semibold px-2 py-0.5 border tracking-wider uppercase ${categoryColors[exp.category] || 'text-cream/60 border-cream/30'}`}>
-                        {exp.category}
-                      </span>
-                    )}
+              <div className="p-6 flex flex-col flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  {exp.icon && <span className="text-2xl">{exp.icon}</span>}
+                  {exp.category && (
+                    <span className={`text-xs font-semibold px-2 py-0.5 border tracking-wider uppercase ${categoryColors[exp.category] || 'text-cream/60 border-black/10 bg-black/5'}`}>
+                      {exp.category}
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-display text-2xl text-cream mb-2">{exp.title}</h3>
+                <p className="text-cream/50 text-sm line-clamp-3 mb-6 flex-1">{exp.description}</p>
+                
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gold/10">
+                  <div className="text-cream/60 text-xs font-medium">
+                    {exp.duration ? `⏱ ${exp.duration}` : ''}
                   </div>
-                  <h3 className="font-display text-2xl text-cream mb-1">{exp.title}</h3>
-                  <p className="text-cream/90 text-sm line-clamp-2 drop-shadow-md">{exp.description}</p>
-                  
-                  <div className="flex flex-col items-start gap-3 mt-4">
-                    {exp.duration && <span className="text-cream/80 text-xs font-medium drop-shadow">⏱ {exp.duration}</span>}
-                    <button
-                      className="btn-gold text-xs px-6 py-2 uppercase tracking-wider font-bold shadow-lg"
-                      onClick={() => document.querySelector('#booking')?.scrollIntoView({ behavior: 'smooth' })}
-                    >
-                      Book
-                    </button>
-                  </div>
+                  <button
+                    className="btn-gold text-xs px-6 py-2.5 uppercase tracking-wider font-bold shadow-lg"
+                    onClick={() => document.querySelector('#booking')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    Book Now
+                  </button>
                 </div>
               </div>
             </motion.div>
