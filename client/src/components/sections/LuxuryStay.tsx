@@ -76,14 +76,6 @@ function RoomCard({ room, index }: { room: any; index: number }) {
           />
         )}
 
-        {/* Price badge */}
-        <div className="absolute top-4 right-4 glass-gold px-3 py-2 text-right">
-          <div className="font-body text-xs text-cream/50 tracking-wider">from</div>
-          <div className="font-display text-xl text-gold font-light">
-            ₹{Number(room.price).toLocaleString()}
-          </div>
-          <div className="font-body text-xs text-cream/50">/night</div>
-        </div>
 
         {/* Rating */}
         <div className="absolute top-4 left-4 flex items-center gap-1 glass px-2 py-1">
@@ -128,20 +120,27 @@ function RoomCard({ room, index }: { room: any; index: number }) {
           )}
         </div>
 
-        {/* View & Book */}
-        <div className="flex gap-3">
-          <button
-            className="btn-gold flex-1 text-xs py-3 justify-center"
-            onClick={() => scrollTo('#booking')}
-          >
-            Book Now
-          </button>
-          <button 
-            className="btn-outline-gold px-4 py-3 text-xs"
-            onClick={() => navigate(`/stay/${room.id}`)}
-          >
-            Details
-          </button>
+        {/* Price & Book */}
+        <div className="flex flex-col gap-4 mt-2">
+          <div className="flex items-end gap-2 border-t border-gold/10 pt-4">
+            <span className="font-body text-[10px] text-cream/50 tracking-wider uppercase pb-0.5">From</span>
+            <span className="font-display text-2xl text-gold leading-none">₹{Number(room.price).toLocaleString()}</span>
+            <span className="font-body text-xs text-cream/40 pb-0.5">/ night</span>
+          </div>
+          <div className="flex gap-3">
+            <button
+              className="btn-gold flex-1 text-xs py-3 justify-center"
+              onClick={() => scrollTo('#booking')}
+            >
+              Book Now
+            </button>
+            <button 
+              className="btn-outline-gold px-4 py-3 text-xs"
+              onClick={() => navigate(`/stay/${room.id}`)}
+            >
+              Details
+            </button>
+          </div>
         </div>
       </div>
 
