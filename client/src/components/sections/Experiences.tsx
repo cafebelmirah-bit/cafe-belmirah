@@ -110,10 +110,10 @@ function ExperienceCard({ exp, index }: { exp: any; index: number }) {
           {exp.description}
         </p>
         <button
-          className="mt-4 btn-outline-gold text-xs py-2.5 w-full justify-center"
+          className="mt-4 btn-gold text-xs py-2.5 w-full justify-center"
           onClick={() => document.querySelector('#booking')?.scrollIntoView({ behavior: 'smooth' })}
         >
-          Enquire
+          Book Now
         </button>
       </div>
     </motion.div>
@@ -196,19 +196,23 @@ export default function Experiences() {
                 />
 
                 {/* Content overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex flex-col items-start">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">{exp.icon}</span>
-                    <span className={`text-xs font-semibold px-2 py-0.5 border tracking-wider uppercase ${categoryColors[exp.category] || ''}`}>
-                      {exp.category}
-                    </span>
+                    {exp.icon && <span className="text-2xl">{exp.icon}</span>}
+                    {exp.category && (
+                      <span className={`text-xs font-semibold px-2 py-0.5 border tracking-wider uppercase ${categoryColors[exp.category] || 'text-cream/60 border-cream/30'}`}>
+                        {exp.category}
+                      </span>
+                    )}
                   </div>
                   <h3 className="font-display text-2xl text-cream mb-1">{exp.title}</h3>
-                  <p className="text-cream/60 text-sm line-clamp-2">{exp.description}</p>
-                  <div className="flex items-center justify-between mt-4">
-                    {exp.duration && <span className="text-cream/40 text-xs">⏱ {exp.duration}</span>}
+                  <p className="text-cream/90 text-sm line-clamp-2 drop-shadow-md">{exp.description}</p>
+                  
+                  <div className="flex flex-col items-start gap-3 mt-4">
+                    {exp.duration && <span className="text-cream/80 text-xs font-medium drop-shadow">⏱ {exp.duration}</span>}
                     <button
-                      className="btn-gold text-xs px-4 py-2"
+                      className="btn-gold text-xs px-6 py-2 uppercase tracking-wider font-bold shadow-lg"
                       onClick={() => document.querySelector('#booking')?.scrollIntoView({ behavior: 'smooth' })}
                     >
                       Book
