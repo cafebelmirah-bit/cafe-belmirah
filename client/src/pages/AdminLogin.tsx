@@ -10,7 +10,7 @@ export default function AdminLogin() {
   
   const onSubmit = async (data: any) => {
     try {
-      const res = await loginAdmin(data);
+      const res = await loginAdmin({ ...data, email: data.email.trim() });
       if (res.success) {
         localStorage.setItem('admin_token', res.token);
         toast.success('Logged in successfully');
