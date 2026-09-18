@@ -117,10 +117,16 @@ function RoomCard({ room, index }: { room: any; index: number }) {
 
         {/* Price & Book */}
         <div className="flex flex-col gap-4 mt-2">
-          <div className="flex items-end gap-2 border-t border-gold/10 pt-4">
-            <span className="font-body text-[10px] text-cream/50 tracking-wider uppercase pb-0.5">From</span>
-            <span className="font-display text-2xl text-gold leading-none">₹{Number(room.price).toLocaleString()}</span>
-            <span className="font-body text-xs text-cream/40 pb-0.5">/ night</span>
+          <div className="flex items-end justify-between border-t border-gold/10 pt-4">
+            <div className="flex items-end gap-2">
+              <span className="font-body text-[10px] text-cream/50 tracking-wider uppercase pb-0.5">From</span>
+              <span className="font-display text-2xl text-gold leading-none">₹{Number(room.price).toLocaleString()}</span>
+              <span className="font-body text-xs text-cream/40 pb-0.5">/ night</span>
+            </div>
+            <div className="flex items-center gap-1 pb-1">
+              <span className="text-gold text-[10px]">★</span>
+              <span className="font-body text-[11px] text-cream/70">{room.rating} <span className="text-cream/30">({room.reviews})</span></span>
+            </div>
           </div>
           <div className="flex gap-3">
             <button
