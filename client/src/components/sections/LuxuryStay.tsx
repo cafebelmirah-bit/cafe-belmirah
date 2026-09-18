@@ -60,7 +60,7 @@ function RoomCard({ room, index }: { room: any; index: number }) {
               <SwiperSlide key={i}>
                 <motion.img
                   src={img}
-                  alt={`${room.name} view ${i + 1}`}
+                  alt=""
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   loading="lazy"
                 />
@@ -70,7 +70,7 @@ function RoomCard({ room, index }: { room: any; index: number }) {
         ) : (
           <motion.img
             src={room.image || (room.images && room.images[0])}
-            alt={room.name}
+            alt=""
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             loading="lazy"
           />
