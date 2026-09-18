@@ -77,13 +77,14 @@ function MenuCard({ item, index }: { item: any; index: number }) {
           {item.description}
         </p>
 
-        {/* Add to order button */}
+        {/* Reserve table temporarily disabled
         <button
           className="mt-3 w-full btn-outline-gold text-xs py-2.5 justify-center"
           onClick={() => document.querySelector('#booking')?.scrollIntoView({ behavior: 'smooth' })}
         >
           Reserve Table
         </button>
+        */}
       </div>
     </motion.div>
   );

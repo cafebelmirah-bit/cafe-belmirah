@@ -223,12 +223,14 @@ export default function Hero() {
           >
             <span className="relative z-10">Book Your Stay</span>
           </button>
+          {/*
           <button
             className="btn-outline-gold opacity-0 w-full sm:w-auto min-w-[180px]"
             onClick={() => scrollTo('#booking')}
           >
             Reserve a Table
           </button>
+          */}
           <button
             className="btn-outline-gold opacity-0 w-full sm:w-auto min-w-[180px]"
             onClick={() => scrollTo('#cafe')}
