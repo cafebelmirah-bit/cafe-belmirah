@@ -77,12 +77,7 @@ function RoomCard({ room, index }: { room: any; index: number }) {
         )}
 
 
-        {/* Rating */}
-        <div className="absolute top-4 left-4 flex items-center gap-1 glass px-2 py-1">
-          <span className="text-gold text-xs">★</span>
-          <span className="font-body text-xs text-cream">{room.rating}</span>
-          <span className="font-body text-xs text-cream/40">({room.reviews})</span>
-        </div>
+
       </div>
 
       {/* Content */}
