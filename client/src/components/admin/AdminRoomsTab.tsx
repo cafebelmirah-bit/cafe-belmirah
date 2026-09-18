@@ -25,6 +25,8 @@ export default function AdminRoomsTab() {
     }
   };
 
+  const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
+
   const handleRoomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -46,25 +48,56 @@ export default function AdminRoomsTab() {
       const amenitiesArray = newRoom.amenities.split(',').map(a => a.trim()).filter(a => a);
       const policiesArray = newRoom.policies.split(',').map(a => a.trim()).filter(a => a);
       
-      const res = await createRoom({ 
+      const payload = { 
         ...newRoom, 
-        images: imageUrls,
-        image: imageUrls.length > 0 ? imageUrls[0] : null,
-        videoUrl: videoUrl,
+        images: imageUrls.length > 0 ? imageUrls : undefined,
+        image: imageUrls.length > 0 ? imageUrls[0] : undefined,
+        videoUrl: videoUrl || undefined,
         price: Number(newRoom.price), 
         capacity: Number(newRoom.capacity),
         totalUnits: Number(newRoom.totalUnits),
         amenities: amenitiesArray,
         policies: policiesArray
-      });
-      setRooms([...rooms, res.item]);
-      toast.success('Room created');
+      };
+
+      if (editingRoomId) {
+        // @ts-ignore
+        const { updateRoom } = await import('../../lib/api');
+        const res = await updateRoom(editingRoomId, payload);
+        setRooms(rooms.map(r => r.id === editingRoomId ? res.item : r));
+        toast.success('Room updated');
+        setEditingRoomId(null);
+      } else {
+        const res = await createRoom(payload as any);
+        setRooms([...rooms, res.item]);
+        toast.success('Room created');
+      }
+
       setNewRoom({ name: '', description: '', price: '', capacity: '', size: '', amenities: '', checkInTime: '2:00 PM', checkOutTime: '11:00 AM', policies: 'Breakfast Included, Welcome Drink on Arrival, Bonfire Access, Free Cancellation (48hrs prior)', totalUnits: '1' });
       setRoomImageFiles(null);
       setRoomVideoFile(null);
     } catch {
-      toast.error('Failed to create room');
+      toast.error(editingRoomId ? 'Failed to update room' : 'Failed to create room');
     }
+  };
+
+  const handleEditClick = (room: any) => {
+    setEditingRoomId(room.id);
+    setNewRoom({
+      name: room.name || '',
+      description: room.description || '',
+      price: String(room.price || ''),
+      capacity: String(room.capacity || ''),
+      size: room.size || '',
+      amenities: (room.amenities || []).join(', '),
+      checkInTime: room.checkInTime || '2:00 PM',
+      checkOutTime: room.checkOutTime || '11:00 AM',
+      policies: (room.policies || []).join(', '),
+      totalUnits: String(room.totalUnits || '1')
+    });
+    setRoomImageFiles(null);
+    setRoomVideoFile(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleRoomDelete = async (id: number) => {
@@ -84,7 +117,9 @@ export default function AdminRoomsTab() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-1">
         <div className="glass p-6 sticky top-32">
-          <h3 className="font-display text-2xl text-gold mb-6">Add Room</h3>
+          <h3 className="font-display text-2xl text-gold mb-6">
+            {editingRoomId ? 'Edit Room' : 'Add Room'}
+          </h3>
           <form onSubmit={handleRoomSubmit} className="space-y-4">
             <div>
               <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Name</label>
@@ -145,7 +180,23 @@ export default function AdminRoomsTab() {
               <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Video Upload (Optional)</label>
               <input type="file" accept="video/*" onChange={e => setRoomVideoFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-cream/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/10 file:text-gold hover:file:bg-gold/20" />
             </div>
-            <button type="submit" className="btn-gold w-full justify-center mt-4 py-3">Add Room</button>
+            <div className="flex gap-2">
+              <button type="submit" className="btn-gold flex-1 py-3">
+                {editingRoomId ? 'Update Room' : 'Add Room'}
+              </button>
+              {editingRoomId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingRoomId(null);
+                    setNewRoom({ name: '', description: '', price: '', capacity: '', size: '', amenities: '', checkInTime: '2:00 PM', checkOutTime: '11:00 AM', policies: 'Breakfast Included, Welcome Drink on Arrival, Bonfire Access, Free Cancellation (48hrs prior)', totalUnits: '1' });
+                  }}
+                  className="btn-outline-gold px-4 py-3"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
         </div>
       </motion.div>
