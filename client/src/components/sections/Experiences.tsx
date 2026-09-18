@@ -187,11 +187,18 @@ export default function Experiences() {
               whileHover={{ y: -8 }}
               className="luxury-card group overflow-hidden flex flex-col h-full"
             >
-              <div className="relative h-72 overflow-hidden shrink-0 bg-black/20 flex items-center justify-center">
+              <div className="relative h-72 overflow-hidden shrink-0 bg-[#f8f5f0] flex items-center justify-center">
+                {/* Blurred background layer for tall images */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center blur-xl opacity-30 scale-125 transition-transform duration-700 group-hover:scale-150"
+                  style={{ backgroundImage: `url(${exp.image})` }}
+                />
+                
+                {/* Crisp uncropped foreground image */}
                 <img
                   src={exp.image}
                   alt={exp.title}
-                  className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
+                  className="relative z-10 w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 drop-shadow-xl"
                   loading="lazy"
                 />
               </div>
