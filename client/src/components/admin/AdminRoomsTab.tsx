@@ -232,7 +232,10 @@ export default function AdminRoomsTab() {
                       <span className="text-[10px] uppercase tracking-wider text-cream/40 bg-black/5 px-2 py-1 rounded">+{room.amenities.length - 3}</span>
                     )}
                   </div>
-                  <button onClick={() => handleRoomDelete(room.id)} className="text-red-400 hover:text-red-300 text-xs uppercase tracking-wider">Delete</button>
+                  <div className="flex gap-4">
+                    <button onClick={() => handleEditClick(room)} className="text-gold hover:text-gold/80 text-xs uppercase tracking-wider">Edit</button>
+                    <button onClick={() => handleRoomDelete(room.id)} className="text-red-400 hover:text-red-300 text-xs uppercase tracking-wider">Delete</button>
+                  </div>
                 </div>
               </div>
             </div>
