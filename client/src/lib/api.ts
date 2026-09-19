@@ -99,6 +99,11 @@ export const createMenuItem = async (data: any) => {
   return response.data;
 };
 
+export const updateMenuItem = async (id: number, data: any) => {
+  const response = await api.put(`/menu/${id}`, data);
+  return response.data;
+};
+
 export const deleteMenuItem = async (id: number) => {
   const response = await api.delete(`/menu/${id}`);
   return response.data;
@@ -187,6 +192,10 @@ export const fetchExperiences = async () => {
 };
 export const createExperience = async (data: any) => {
   const response = await api.post('/experiences', data);
+  return response.data;
+};
+export const updateExperience = async (id: number, data: any) => {
+  const response = await api.put(`/experiences/${id}`, data);
   return response.data;
 };
 export const deleteExperience = async (id: number) => {

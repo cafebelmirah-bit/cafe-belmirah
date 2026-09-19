@@ -114,6 +114,7 @@ router.delete('/hero-media/:id', authenticateAdmin, contentController.deleteHero
 // --- Experiences ---
 router.get('/experiences', contentController.getExperiences);
 router.post('/experiences', authenticateAdmin, contentController.createExperience);
+router.put('/experiences/:id', authenticateAdmin, contentController.updateExperience);
 router.delete('/experiences/:id', authenticateAdmin, contentController.deleteExperience);
 
 // --- Story Content ---

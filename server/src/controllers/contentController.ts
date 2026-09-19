@@ -230,6 +230,23 @@ export const deleteExperience = async (req: Request, res: Response) => {
   }
 };
 
+export const updateExperience = async (req: Request, res: Response) => {
+  try {
+    const item = await Experience.findByPk(Number(req.params.id));
+    if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+    
+    let payload = { ...req.body };
+    if (Array.isArray(payload.images)) {
+      payload.images = JSON.stringify(payload.images);
+    }
+    
+    await item.update(payload);
+    res.json({ success: true, item });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 // --- Story Content ---
 export const getStory = async (req: Request, res: Response) => {
   try {

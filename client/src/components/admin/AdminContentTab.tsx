@@ -123,6 +123,8 @@ export default function AdminContentTab() {
     } catch { toast.error('Delete failed'); }
   };
 
+  const [editingExperienceId, setEditingExperienceId] = useState<number | null>(null);
+
   const handleExperienceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -134,16 +136,41 @@ export default function AdminContentTab() {
         }
       }
 
-      const res = await createExperience({
+      const payload = {
         ...newExperience,
-        image: imageUrls.length > 0 ? imageUrls[0] : null,
-        images: imageUrls
-      });
-      setExperiences([...experiences, res.item]);
-      toast.success('Experience added');
+        image: imageUrls.length > 0 ? imageUrls[0] : undefined,
+        images: imageUrls.length > 0 ? imageUrls : undefined
+      };
+
+      if (editingExperienceId) {
+        // @ts-ignore
+        const { updateExperience } = await import('../../lib/api');
+        const res = await updateExperience(editingExperienceId, payload);
+        setExperiences(experiences.map(exp => exp.id === editingExperienceId ? res.item : exp));
+        toast.success('Experience updated');
+        setEditingExperienceId(null);
+      } else {
+        // @ts-ignore
+        const { createExperience } = await import('../../lib/api');
+        const res = await createExperience(payload);
+        setExperiences([...experiences, res.item]);
+        toast.success('Experience added');
+      }
+      
       setNewExperience({ title: '', description: '', icon: '🌟' });
       setExperienceFiles([]);
-    } catch { toast.error('Failed to add experience'); }
+    } catch { toast.error(editingExperienceId ? 'Failed to update experience' : 'Failed to add experience'); }
+  };
+
+  const handleExperienceEditClick = (exp: any) => {
+    setEditingExperienceId(exp.id);
+    setNewExperience({
+      title: exp.title || '',
+      description: exp.description || '',
+      icon: exp.icon || '🌟'
+    });
+    setExperienceFiles([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleExperienceDelete = async (id: number) => {
@@ -248,19 +275,33 @@ export default function AdminContentTab() {
 
             {activeContentTab === 'experiences' && (
               <form onSubmit={handleExperienceSubmit} className="space-y-4">
+                <h4 className="font-display text-xl text-gold mb-4">
+                  {editingExperienceId ? 'Edit Experience' : 'Add Experience'}
+                </h4>
                 <input required placeholder="Title" value={newExperience.title} onChange={e => setNewExperience({ ...newExperience, title: e.target.value })} className="luxury-input w-full" />
                 <textarea required placeholder="Description" value={newExperience.description} onChange={e => setNewExperience({ ...newExperience, description: e.target.value })} className="luxury-input w-full min-h-[80px]" />
-                <input placeholder="Icon (Emoji)" value={newExperience.icon} onChange={e => setNewExperience({ ...newExperience, icon: e.target.value })} className="luxury-input w-full" />
-                <div className="text-center text-xs text-cream/40 -my-2">- OR -</div>
-                <input type="file" multiple onChange={e => {
-                  if (e.target.files) {
-                    setExperienceFiles(Array.from(e.target.files));
-                  }
-                }} className="w-full text-sm text-cream/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/10 file:text-gold hover:file:bg-gold/20" />
-                {experienceFiles.length > 0 && (
-                  <p className="text-xs text-cream/50 mt-1">{experienceFiles.length} file(s) selected.</p>
-                )}
-                <button type="submit" className="btn-gold w-full py-3">Add Experience</button>
+                <input required placeholder="Icon (emoji)" value={newExperience.icon} onChange={e => setNewExperience({ ...newExperience, icon: e.target.value })} className="luxury-input w-full" />
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Images (Multiple allowed)</label>
+                  <input type="file" multiple accept="image/*" onChange={e => setExperienceFiles(Array.from(e.target.files || []))} className="w-full text-sm text-cream/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/10 file:text-gold hover:file:bg-gold/20" />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="btn-gold flex-1 py-3">
+                    {editingExperienceId ? 'Update Experience' : 'Add Experience'}
+                  </button>
+                  {editingExperienceId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingExperienceId(null);
+                        setNewExperience({ title: '', description: '', icon: '🌟' });
+                      }}
+                      className="btn-outline-gold px-4 py-3"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </form>
             )}
 
@@ -504,16 +545,21 @@ export default function AdminContentTab() {
               </div>
             )}
 
-            {activeContentTab === 'experiences' && experiences.map(e => (
-              <div key={e.id} className="glass p-4 flex gap-4 items-center">
-                <div className="w-16 h-16 bg-dark-100 rounded flex items-center justify-center text-2xl border border-black/5 overflow-hidden shrink-0">
-                  {e.image ? <img src={e.image} alt={e.title} className="w-full h-full object-cover" /> : e.icon}
+            {activeContentTab === 'experiences' && experiences.map(exp => (
+              <div key={exp.id} className="glass flex gap-4 items-center overflow-hidden">
+                <div className="w-24 h-24 bg-dark-100 flex items-center justify-center text-3xl border-r border-black/5 overflow-hidden shrink-0">
+                  {exp.image ? <img src={exp.image} alt={exp.title} className="w-full h-full object-cover" /> : exp.icon}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-gold font-bold">{e.title}</h4>
-                  <p className="text-cream/50 text-xs truncate">{e.description}</p>
+                <div className="p-4 flex flex-col flex-1">
+                  <h5 className="font-display text-lg text-cream flex items-center gap-2 mb-2">
+                    <span>{exp.icon}</span> {exp.title}
+                  </h5>
+                  <p className="text-cream/50 text-sm mb-4 flex-1">{exp.description}</p>
+                  <div className="flex gap-4 mt-auto">
+                    <button onClick={() => handleExperienceEditClick(exp)} className="text-gold hover:text-gold/80 text-xs uppercase tracking-wider">Edit</button>
+                    <button onClick={() => handleExperienceDelete(exp.id)} className="text-red-400 hover:text-red-300 text-xs uppercase tracking-wider">Delete</button>
+                  </div>
                 </div>
-                <button onClick={() => handleExperienceDelete(e.id)} className="text-red-400 text-xs uppercase font-bold tracking-wider">Delete</button>
               </div>
             ))}
 
