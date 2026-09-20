@@ -14,11 +14,12 @@ export const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
   secure: true,
+  family: 4, // Force IPv4 directly in socket options to bypass IPv6 routing issues
   auth: {
     user: process.env.SMTP_USER || 'YOUR_EMAIL@gmail.com',
     pass: process.env.SMTP_PASS || 'YOUR_APP_PASSWORD',
   },
-});
+} as any);
 
 export const sendBookingConfirmation = async (email: string, name: string, referenceId: string, details: string) => {
   try {
