@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
+import { transporter } from '../utils/mailer';
 
 // Import Controllers
 import * as adminController from '../controllers/adminController';
@@ -46,6 +47,21 @@ const authenticateAdmin = (req: Request, res: Response, next: NextFunction) => {
 // ==========================================
 // ROUTES
 // ==========================================
+
+// --- Utility / Test ---
+router.get('/test-email', async (req: Request, res: Response) => {
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.SMTP_USER || 'noreply@cafebelmirah.com',
+      to: process.env.SMTP_USER || 'pathareharshal68@gmail.com',
+      subject: 'Test Email - Café Belmirah',
+      text: 'If you are reading this, your SMTP settings on Railway are perfectly configured!'
+    });
+    res.json({ success: true, message: 'Test email sent successfully!', info });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message, stack: error.stack, fullError: error });
+  }
+});
 
 // --- Auth ---
 router.post('/admin/login', adminController.login);
