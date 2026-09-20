@@ -1,11 +1,19 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import dns from 'dns';
+
+// Force IPv4 first to prevent ENETUNREACH on environments without IPv6 routing
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 dotenv.config();
 
 // Create reusable transporter object using SMTP transport
 export const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.SMTP_USER || 'YOUR_EMAIL@gmail.com',
     pass: process.env.SMTP_PASS || 'YOUR_APP_PASSWORD',
