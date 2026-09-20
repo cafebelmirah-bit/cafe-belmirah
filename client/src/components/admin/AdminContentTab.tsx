@@ -143,16 +143,13 @@ export default function AdminContentTab() {
       };
 
       if (editingExperienceId) {
-        // @ts-ignore
         const { updateExperience } = await import('../../lib/api');
         const res = await updateExperience(editingExperienceId, payload);
         setExperiences(experiences.map(exp => exp.id === editingExperienceId ? res.item : exp));
         toast.success('Experience updated');
         setEditingExperienceId(null);
       } else {
-        // @ts-ignore
-        const { createExperience } = await import('../../lib/api');
-        const res = await createExperience(payload);
+        const res = await createExperience(payload as any);
         setExperiences([...experiences, res.item]);
         toast.success('Experience added');
       }
