@@ -128,13 +128,12 @@ const startServer = async () => {
     }
     
     console.log('Database synced.');
-
-    app.listen(Number(PORT), '0.0.0.0', () => {
-      console.log(`Server running on port ${PORT}`);
-    });
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }
 };
 
-startServer();
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+  startServer();
+});
