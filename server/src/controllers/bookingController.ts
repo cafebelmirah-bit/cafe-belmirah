@@ -160,6 +160,13 @@ export const getInvoice = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
+    const { Settings } = await import('../models/Settings');
+    const settings = (await Settings.findOne()) as any;
+    const addr1 = settings?.propertyAddressLine1 || '123 Mountain View Road';
+    const addr2 = settings?.propertyAddressLine2 || 'Hill Station, India 400001';
+    const email = settings?.propertyEmail || 'contact@cafebelmirah.com';
+    const phone = settings?.propertyPhone || '+91 98765 43210';
+
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
     
     res.setHeader('Content-Type', 'application/pdf');
@@ -173,9 +180,9 @@ export const getInvoice = async (req: Request, res: Response) => {
 
     doc.fillColor('#C5A880').fontSize(28).font('Times-Bold').text('CAFÉ BELMIRAH', 50, 50);
     doc.fillColor('#666666').fontSize(10).font('Helvetica').text('Luxury Café & Glamping', 50, 80);
-    doc.text('123 Mountain View Road', 50, 95);
-    doc.text('Hill Station, India 400001', 50, 110);
-    doc.text('contact@cafebelmirah.com', 50, 125);
+    doc.text(addr1, 50, 95);
+    doc.text(addr2, 50, 110);
+    doc.text(email, 50, 125);
     
     doc.fillColor('#333333').fontSize(20).font('Helvetica-Bold').text('INVOICE', 50, 50, { align: 'right' });
     doc.fontSize(10).font('Helvetica').text(`Invoice #: INV-${referenceId}`, 50, 80, { align: 'right' });
@@ -190,7 +197,7 @@ export const getInvoice = async (req: Request, res: Response) => {
     doc.text(booking.email, 50, 205);
     doc.text(booking.phone, 50, 220);
 
-    const qrBuffer = await QRCode.toBuffer(`https://cafebelmirah.com/verify/${referenceId}`);
+    const qrBuffer = await QRCode.toBuffer(`https://belmirah.in/verify/${referenceId}`);
     doc.image(qrBuffer, 450, 160, { width: 100 });
 
     generateHr(260);
@@ -271,7 +278,7 @@ export const getInvoice = async (req: Request, res: Response) => {
     const bottomY = doc.page.height - 100;
     generateHr(bottomY - 20);
     doc.fillColor('#C5A880').fontSize(12).font('Times-Bold').text('Thank you for choosing Café Belmirah!', 50, bottomY, { align: 'center' });
-    doc.fillColor('#666666').fontSize(8).font('Helvetica').text('For any queries, please contact us at +91 98765 43210 or contact@cafebelmirah.com', 50, bottomY + 15, { align: 'center' });
+    doc.fillColor('#666666').fontSize(8).font('Helvetica').text(`For any queries, please contact us at ${phone} or ${email}`, 50, bottomY + 15, { align: 'center' });
     
     doc.end();
   } catch (error: any) {
