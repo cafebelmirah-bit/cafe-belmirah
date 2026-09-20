@@ -10,6 +10,7 @@ export class Settings extends Model {
   declare propertyEmail: string;
   declare propertyPhone: string;
   declare propertyLogo: string | null;
+  declare propertyLogoHeight: number;
 }
 
 Settings.init(
@@ -52,6 +53,11 @@ Settings.init(
     propertyLogo: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    propertyLogoHeight: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 40,
     }
   },
   {

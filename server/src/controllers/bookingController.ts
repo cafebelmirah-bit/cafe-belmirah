@@ -167,6 +167,7 @@ export const getInvoice = async (req: Request, res: Response) => {
     const addr2 = settings?.propertyAddressLine2 || 'Hill Station, India 400001';
     const email = settings?.propertyEmail || 'contact@cafebelmirah.com';
     const phone = settings?.propertyPhone || '+91 98765 43210';
+    const logoHeight = settings?.propertyLogoHeight || 40;
 
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
     
@@ -183,8 +184,8 @@ export const getInvoice = async (req: Request, res: Response) => {
     if (settings?.propertyLogo) {
       try {
         const response = await axios.get(settings.propertyLogo, { responseType: 'arraybuffer' });
-        doc.image(response.data, 50, 40, { height: 40 });
-        yOffset = 100;
+        doc.image(response.data, 50, 40, { height: logoHeight });
+        yOffset = 50 + logoHeight + 10;
       } catch (err) {
         console.error('Failed to load logo for invoice', err);
         doc.fillColor('#C5A880').fontSize(28).font('Times-Bold').text('CAFÉ BELMIRAH', 50, 50);
@@ -203,26 +204,28 @@ export const getInvoice = async (req: Request, res: Response) => {
     doc.text(`Date: ${new Date().toLocaleDateString()}`, 50, 95, { align: 'right' });
     doc.text('Status: PAID (Advance)', 50, 110, { align: 'right' });
 
-    generateHr(150);
+    const yShift = Math.max(0, yOffset + 50 - 150);
 
-    doc.fillColor('#333333').fontSize(12).font('Helvetica-Bold').text('Bill To:', 50, 170);
+    generateHr(150 + yShift);
+
+    doc.fillColor('#333333').fontSize(12).font('Helvetica-Bold').text('Bill To:', 50, 170 + yShift);
     doc.font('Helvetica').fontSize(10);
-    doc.text(booking.name, 50, 190);
-    doc.text(booking.email, 50, 205);
-    doc.text(booking.phone, 50, 220);
+    doc.text(booking.name, 50, 190 + yShift);
+    doc.text(booking.email, 50, 205 + yShift);
+    doc.text(booking.phone, 50, 220 + yShift);
 
     const qrBuffer = await QRCode.toBuffer(`https://belmirah.in/verify/${referenceId}`);
-    doc.image(qrBuffer, 450, 160, { width: 100 });
+    doc.image(qrBuffer, 450, 160 + yShift, { width: 100 });
 
-    generateHr(260);
+    generateHr(260 + yShift);
 
     doc.font('Helvetica-Bold').fontSize(10);
-    doc.text('DESCRIPTION', 50, 280);
-    doc.text('QTY / GUESTS', 280, 280, { width: 90, align: 'right' });
-    doc.text('UNIT PRICE', 370, 280, { width: 90, align: 'right' });
-    doc.text('TOTAL', 470, 280, { width: 80, align: 'right' });
+    doc.text('DESCRIPTION', 50, 280 + yShift);
+    doc.text('QTY / GUESTS', 280, 280 + yShift, { width: 90, align: 'right' });
+    doc.text('UNIT PRICE', 370, 280 + yShift, { width: 90, align: 'right' });
+    doc.text('TOTAL', 470, 280 + yShift, { width: 80, align: 'right' });
     
-    generateHr(300);
+    generateHr(300 + yShift);
 
     let totalAmount = 0;
     doc.font('Helvetica').fontSize(10);
@@ -239,54 +242,54 @@ export const getInvoice = async (req: Request, res: Response) => {
       totalAmount = pricePerNight * diffDays;
       const advancePaid = totalAmount * 0.3;
       
-      doc.text(`Glamping Stay - ${booking.roomType}`, 50, 320);
-      doc.fillColor('#666666').fontSize(8).text(`Check-In: ${booking.checkIn} | Check-Out: ${booking.checkOut}`, 50, 335);
+      doc.text(`Glamping Stay - ${booking.roomType}`, 50, 320 + yShift);
+      doc.fillColor('#666666').fontSize(8).text(`Check-In: ${booking.checkIn} | Check-Out: ${booking.checkOut}`, 50, 335 + yShift);
       
       doc.fillColor('#333333').fontSize(10);
-      doc.text(`${diffDays} Night(s)`, 280, 320, { width: 90, align: 'right' });
-      doc.text(`Rs. ${pricePerNight.toLocaleString()}`, 370, 320, { width: 90, align: 'right' });
-      doc.text(`Rs. ${totalAmount.toLocaleString()}`, 470, 320, { width: 80, align: 'right' });
+      doc.text(`${diffDays} Night(s)`, 280, 320 + yShift, { width: 90, align: 'right' });
+      doc.text(`Rs. ${pricePerNight.toLocaleString()}`, 370, 320 + yShift, { width: 90, align: 'right' });
+      doc.text(`Rs. ${totalAmount.toLocaleString()}`, 470, 320 + yShift, { width: 80, align: 'right' });
       
-      generateHr(360);
+      generateHr(360 + yShift);
       
       doc.font('Helvetica-Bold');
-      doc.text('Total Amount:', 370, 380, { width: 90, align: 'right' });
-      doc.text(`Rs. ${totalAmount.toLocaleString()}`, 470, 380, { width: 80, align: 'right' });
+      doc.text('Total Amount:', 370, 380 + yShift, { width: 90, align: 'right' });
+      doc.text(`Rs. ${totalAmount.toLocaleString()}`, 470, 380 + yShift, { width: 80, align: 'right' });
       
-      doc.text('Advance Paid (30%):', 370, 400, { width: 90, align: 'right' });
-      doc.text(`Rs. ${advancePaid.toLocaleString()}`, 470, 400, { width: 80, align: 'right' });
+      doc.text('Advance Paid (30%):', 370, 400 + yShift, { width: 90, align: 'right' });
+      doc.text(`Rs. ${advancePaid.toLocaleString()}`, 470, 400 + yShift, { width: 80, align: 'right' });
       
-      doc.text('Balance Due at Property:', 370, 420, { width: 90, align: 'right' });
-      doc.text(`Rs. ${(totalAmount - advancePaid).toLocaleString()}`, 470, 420, { width: 80, align: 'right' });
+      doc.text('Balance Due at Property:', 370, 420 + yShift, { width: 90, align: 'right' });
+      doc.text(`Rs. ${(totalAmount - advancePaid).toLocaleString()}`, 470, 420 + yShift, { width: 80, align: 'right' });
 
     } else {
       const reservationFee = 500;
       totalAmount = reservationFee * booking.guests;
       
-      doc.text(`Table Reservation`, 50, 320);
-      doc.fillColor('#666666').fontSize(8).text(`Date: ${booking.date} | Time: ${booking.time}`, 50, 335);
+      doc.text(`Table Reservation`, 50, 320 + yShift);
+      doc.fillColor('#666666').fontSize(8).text(`Date: ${booking.date} | Time: ${booking.time}`, 50, 335 + yShift);
       if (booking.occasion && booking.occasion !== 'None') {
-        doc.text(`Occasion: ${booking.occasion}`, 50, 350);
+        doc.text(`Occasion: ${booking.occasion}`, 50, 350 + yShift);
       }
       
       doc.fillColor('#333333').fontSize(10);
-      doc.text(`${booking.guests} Guest(s)`, 280, 320, { width: 90, align: 'right' });
-      doc.text(`Rs. ${reservationFee.toLocaleString()}`, 370, 320, { width: 90, align: 'right' });
-      doc.text(`Rs. ${totalAmount.toLocaleString()}`, 470, 320, { width: 80, align: 'right' });
+      doc.text(`${booking.guests} Guest(s)`, 280, 320 + yShift, { width: 90, align: 'right' });
+      doc.text(`Rs. ${reservationFee.toLocaleString()}`, 370, 320 + yShift, { width: 90, align: 'right' });
+      doc.text(`Rs. ${totalAmount.toLocaleString()}`, 470, 320 + yShift, { width: 80, align: 'right' });
       
-      generateHr(380);
+      generateHr(380 + yShift);
       
       doc.font('Helvetica-Bold');
-      doc.text('Total Reservation Fee Paid:', 270, 400, { width: 190, align: 'right' });
-      doc.text(`Rs. ${totalAmount.toLocaleString()}`, 470, 400, { width: 80, align: 'right' });
+      doc.text('Total Reservation Fee Paid:', 270, 400 + yShift, { width: 190, align: 'right' });
+      doc.text(`Rs. ${totalAmount.toLocaleString()}`, 470, 400 + yShift, { width: 80, align: 'right' });
       
       doc.fillColor('#666666').fontSize(8).font('Helvetica-Oblique');
-      doc.text('* This amount will be deducted from your final food & beverage bill.', 50, 430);
+      doc.text('* This amount will be deducted from your final food & beverage bill.', 50, 430 + yShift);
     }
     
     if (booking.specialRequests) {
-      doc.fillColor('#333333').fontSize(10).font('Helvetica-Bold').text('Special Requests:', 50, 470);
-      doc.font('Helvetica').text(booking.specialRequests, 50, 485, { width: 400 });
+      doc.fillColor('#333333').fontSize(10).font('Helvetica-Bold').text('Special Requests:', 50, 470 + yShift);
+      doc.font('Helvetica').text(booking.specialRequests, 50, 485 + yShift, { width: 400 });
     }
     
     const bottomY = doc.page.height - 100;

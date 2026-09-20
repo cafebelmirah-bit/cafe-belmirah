@@ -10,7 +10,8 @@ export default function AdminSettingsTab() {
     propertyAddressLine2: 'Hill Station, India 400001',
     propertyEmail: 'contact@cafebelmirah.com',
     propertyPhone: '+91 98765 43210',
-    propertyLogo: ''
+    propertyLogo: '',
+    propertyLogoHeight: 40
   });
   const [loading, setLoading] = useState(true);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -138,6 +139,21 @@ export default function AdminSettingsTab() {
                   className="w-full text-sm text-cream/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/10 file:text-gold hover:file:bg-gold/20"
                 />
                 <p className="text-[10px] text-cream/40 mt-1">This logo will replace the text header on the PDF invoices. Must be PNG or JPG.</p>
+              </div>
+              <div className="pt-2">
+                <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">
+                  Logo Size (Height: {settings.propertyLogoHeight}px)
+                </label>
+                <input 
+                  type="range" 
+                  min="20" 
+                  max="120" 
+                  step="5"
+                  value={settings.propertyLogoHeight} 
+                  onChange={e => setSettings({...settings, propertyLogoHeight: Number(e.target.value)})}
+                  className="w-full accent-gold"
+                />
+                <p className="text-[10px] text-cream/40 mt-1">Drag to adjust the logo size on the PDF invoice.</p>
               </div>
             </div>
           </div>
