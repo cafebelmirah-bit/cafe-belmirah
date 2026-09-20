@@ -5,6 +5,7 @@ import { Room } from '../models/Room';
 import { Op } from 'sequelize';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import axios from 'axios';
 
 export const checkAvailability = async (req: Request, res: Response) => {
   try {
@@ -178,11 +179,24 @@ export const getInvoice = async (req: Request, res: Response) => {
       doc.strokeColor('#aaaaaa').lineWidth(1).moveTo(50, y).lineTo(550, y).stroke();
     };
 
-    doc.fillColor('#C5A880').fontSize(28).font('Times-Bold').text('CAFÉ BELMIRAH', 50, 50);
-    doc.fillColor('#666666').fontSize(10).font('Helvetica').text('Luxury Café & Glamping', 50, 80);
-    doc.text(addr1, 50, 95);
-    doc.text(addr2, 50, 110);
-    doc.text(email, 50, 125);
+    let yOffset = 95;
+    if (settings?.propertyLogo) {
+      try {
+        const response = await axios.get(settings.propertyLogo, { responseType: 'arraybuffer' });
+        doc.image(response.data, 50, 40, { height: 40 });
+        yOffset = 100;
+      } catch (err) {
+        console.error('Failed to load logo for invoice', err);
+        doc.fillColor('#C5A880').fontSize(28).font('Times-Bold').text('CAFÉ BELMIRAH', 50, 50);
+      }
+    } else {
+      doc.fillColor('#C5A880').fontSize(28).font('Times-Bold').text('CAFÉ BELMIRAH', 50, 50);
+    }
+    
+    doc.fillColor('#666666').fontSize(10).font('Helvetica').text('Luxury Café & Glamping', 50, yOffset - 15);
+    doc.text(addr1, 50, yOffset);
+    doc.text(addr2, 50, yOffset + 15);
+    doc.text(email, 50, yOffset + 30);
     
     doc.fillColor('#333333').fontSize(20).font('Helvetica-Bold').text('INVOICE', 50, 50, { align: 'right' });
     doc.fontSize(10).font('Helvetica').text(`Invoice #: INV-${referenceId}`, 50, 80, { align: 'right' });

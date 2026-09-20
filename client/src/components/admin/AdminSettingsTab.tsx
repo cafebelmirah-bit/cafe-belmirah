@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { fetchSettings, updateSettings } from '../../lib/api';
+import { fetchSettings, updateSettings, uploadPhoto } from '../../lib/api';
 
 export default function AdminSettingsTab() {
   const [settings, setSettings] = useState<any>({ 
@@ -9,9 +9,11 @@ export default function AdminSettingsTab() {
     propertyAddressLine1: '123 Mountain View Road',
     propertyAddressLine2: 'Hill Station, India 400001',
     propertyEmail: 'contact@cafebelmirah.com',
-    propertyPhone: '+91 98765 43210'
+    propertyPhone: '+91 98765 43210',
+    propertyLogo: ''
   });
   const [loading, setLoading] = useState(true);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadData();
@@ -31,7 +33,13 @@ export default function AdminSettingsTab() {
   const handleSettingsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await updateSettings(settings);
+      let finalSettings = { ...settings };
+      if (logoFile) {
+        const uploadRes = await uploadPhoto(logoFile);
+        finalSettings.propertyLogo = uploadRes.url;
+      }
+      
+      const res = await updateSettings(finalSettings);
       if (res.success) {
         toast.success('Settings updated successfully');
         setSettings(res.data);
@@ -115,6 +123,21 @@ export default function AdminSettingsTab() {
                     placeholder="+91 98765 43210"
                   />
                 </div>
+              </div>
+              <div className="pt-2">
+                <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Invoice Logo (PNG/JPG Only)</label>
+                {settings.propertyLogo && !logoFile && (
+                  <div className="mb-2">
+                    <img src={settings.propertyLogo} alt="Logo" className="h-16 object-contain bg-white p-2 rounded" />
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  accept="image/png, image/jpeg, image/jpg"
+                  onChange={e => setLogoFile(e.target.files ? e.target.files[0] : null)}
+                  className="w-full text-sm text-cream/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/10 file:text-gold hover:file:bg-gold/20"
+                />
+                <p className="text-[10px] text-cream/40 mt-1">This logo will replace the text header on the PDF invoices. Must be PNG or JPG.</p>
               </div>
             </div>
           </div>

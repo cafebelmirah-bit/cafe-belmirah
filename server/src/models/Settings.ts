@@ -9,6 +9,7 @@ export class Settings extends Model {
   declare propertyAddressLine2: string;
   declare propertyEmail: string;
   declare propertyPhone: string;
+  declare propertyLogo: string | null;
 }
 
 Settings.init(
@@ -47,6 +48,10 @@ Settings.init(
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: '+91 98765 43210',
+    },
+    propertyLogo: {
+      type: DataTypes.STRING,
+      allowNull: true,
     }
   },
   {
