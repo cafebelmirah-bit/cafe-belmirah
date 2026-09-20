@@ -72,7 +72,7 @@ const startServer = async () => {
       console.log('Fixed empty story!');
     }
 
-    await Settings.sync();
+    await Settings.sync({ alter: true });
     await SiteContent.sync();
     
     // Seed default settings if none exists
