@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
-import { transporter } from '../utils/mailer';
+import { getTransporter } from '../utils/mailer';
 
 // Import Controllers
 import * as adminController from '../controllers/adminController';
@@ -51,6 +51,7 @@ const authenticateAdmin = (req: Request, res: Response, next: NextFunction) => {
 // --- Utility / Test ---
 router.get('/test-email', async (req: Request, res: Response) => {
   try {
+    const transporter = await getTransporter();
     const info = await transporter.sendMail({
       from: process.env.SMTP_USER || 'noreply@cafebelmirah.com',
       to: process.env.SMTP_USER || 'pathareharshal68@gmail.com',

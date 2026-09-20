@@ -9,19 +9,26 @@ if (dns.setDefaultResultOrder) {
 
 dotenv.config();
 
-// Create reusable transporter object using SMTP transport
-export const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER || 'YOUR_EMAIL@gmail.com',
-    pass: process.env.SMTP_PASS || 'YOUR_APP_PASSWORD',
-  },
-});
+export const getTransporter = async () => {
+  const { address } = await dns.promises.lookup('smtp.gmail.com', { family: 4 });
+  return nodemailer.createTransport({
+    host: address,
+    port: 465,
+    secure: true,
+    tls: {
+      servername: 'smtp.gmail.com'
+    },
+    auth: {
+      user: process.env.SMTP_USER || 'YOUR_EMAIL@gmail.com',
+      pass: process.env.SMTP_PASS || 'YOUR_APP_PASSWORD',
+    },
+  });
+};
 
 export const sendBookingConfirmation = async (email: string, name: string, referenceId: string, details: string) => {
   try {
+    const transporter = await getTransporter();
+
     const info = await transporter.sendMail({
       from: `"Café Belmirah" <${process.env.SMTP_USER || 'noreply@cafebelmirah.com'}>`,
       to: email,
