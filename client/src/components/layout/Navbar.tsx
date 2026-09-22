@@ -57,8 +57,8 @@ export default function Navbar() {
               <img
                 src={content.site_logo}
                 alt="Café Belmirah"
-                style={{ height: content.site_logo_px ? `${content.site_logo_px}px` : '56px' }}
-                className="w-auto object-contain"
+                style={{ height: scrolled ? '48px' : (content.site_logo_px ? `${content.site_logo_px}px` : '56px') }}
+                className="w-auto object-contain transition-all duration-300"
               />
             ) : (
               <>
