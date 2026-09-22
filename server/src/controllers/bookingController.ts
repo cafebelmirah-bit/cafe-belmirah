@@ -122,7 +122,7 @@ export const deleteBooking = async (req: Request, res: Response) => {
 
 export const trackBooking = async (req: Request, res: Response) => {
   try {
-    const { email, referenceId } = req.query;
+    const { email, referenceId } = req.body;
     if (!email || !referenceId) {
       return res.status(400).json({ success: false, message: 'Email and Reference ID are required' });
     }

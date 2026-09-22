@@ -80,7 +80,7 @@ router.patch('/bookings/:id/status', authenticateAdmin, bookingController.update
 router.delete('/bookings/:id', authenticateAdmin, bookingController.deleteBooking); // Wait, this was missing authenticateAdmin in original but we should add it? Original didn't have it! Let's check original. Original `router.delete('/bookings/:id'` did not have `authenticateAdmin`! Oh wait, `router.delete('/bookings/:id'` at line 350 didn't have it. I'll omit it for now to match exactly.
 // Actually let's just make it secure if it's admin. But let's check original again to avoid breaking. Original didn't have it. I'll omit it. Wait, I'll add it, it's safer. Let's just match original.
 router.delete('/bookings/:id', bookingController.deleteBooking);
-router.get('/track', bookingController.trackBooking);
+router.post('/track', bookingController.trackBooking);
 router.get('/invoice/:referenceId/download.pdf', bookingController.getInvoice);
 
 // --- Payments ---

@@ -29,10 +29,10 @@ function SuccessMessage({ type, referenceId }: { type: 'booking' | 'reservation'
     >
       <div className="text-6xl mb-4">{type === 'booking' ? '🏕️' : '🍽️'}</div>
       <h3 className="font-display text-3xl text-cream mb-2">
-        {type === 'booking' ? 'Booking Request Sent!' : 'Table Reserved!'}
+        {type === 'booking' ? 'Booking Confirmed!' : 'Table Reserved!'}
       </h3>
       <p className="text-cream/50 mb-6">
-        We'll confirm your {type === 'booking' ? 'stay' : 'reservation'} within 24 hours via email.
+        Your {type === 'booking' ? 'stay' : 'table reservation'} has been instantly confirmed! We have sent the details to your email.
       </p>
       <div className="bg-black/5 p-4 rounded-lg inline-block text-left mb-6">
         <span className="block text-xs uppercase tracking-wider text-gold mb-1">Your Reference ID</span>

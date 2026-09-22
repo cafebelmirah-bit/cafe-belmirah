@@ -62,7 +62,7 @@ Booking.init(
     },
     status: {
       type: DataTypes.STRING,
-      defaultValue: 'pending',
+      defaultValue: 'confirmed',
     },
   },
   {
