@@ -74,12 +74,12 @@ export default function Navbar() {
           </button>
           
           {/* Desktop Navigation */}
-          <nav className={`hidden xl:flex items-center gap-6 2xl:gap-8 absolute left-1/2 -translate-x-1/2 ${scrolled ? 'text-cream/70' : 'text-white/80'}`}>
+          <nav className={`hidden lg:flex items-center gap-8 absolute left-1/2 -translate-x-1/2 ${scrolled ? 'text-cream/70' : 'text-white/80'}`}>
             {navLinks.map(link => (
               <button
                 key={link.href}
                 onClick={() => handleNavClick(link.href)}
-                className="nav-link whitespace-nowrap"
+                className="nav-link"
               >
                 {link.label}
               </button>
@@ -87,13 +87,13 @@ export default function Navbar() {
           </nav>
 
           {/* CTA Button */}
-          <div className="hidden lg:flex items-center gap-4 2xl:gap-6 relative z-10">
-            <Link to="/track" className={`font-body text-xs hover:text-gold uppercase tracking-wider transition-colors whitespace-nowrap ${scrolled ? 'text-cream/70' : 'text-white/80'}`}>
+          <div className="hidden lg:flex items-center gap-6 relative z-10">
+            <Link to="/track" className={`font-body text-xs hover:text-gold uppercase tracking-wider transition-colors ${scrolled ? 'text-cream/70' : 'text-white/80'}`}>
               Find Booking
             </Link>
             <button
               onClick={() => handleNavClick('#booking')}
-              className="btn-gold text-xs px-5 py-2.5 2xl:px-6 2xl:py-3 relative z-10 whitespace-nowrap"
+              className="btn-gold text-xs px-6 py-3 relative z-10"
             >
               <span className="relative z-10">Book Now</span>
             </button>
@@ -101,7 +101,7 @@ export default function Navbar() {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="xl:hidden flex flex-col gap-1.5 p-2 relative z-50"
+            className="lg:hidden flex flex-col gap-1.5 p-2 relative z-50"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
