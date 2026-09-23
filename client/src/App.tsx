@@ -13,6 +13,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import TrackBooking from './pages/TrackBooking';
 import RoomDetails from './pages/RoomDetails';
+import Policies from './pages/Policies';
 import { Navigate } from 'react-router-dom';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -56,6 +57,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/stay/:id" element={<RoomDetails />} />
         <Route path="/track" element={<TrackBooking />} />
+        <Route path="/policies" element={<Policies />} />
         <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

@@ -14,6 +14,8 @@ export class Booking extends Model {
   declare guests: number;
   declare specialRequests: string;
   declare status: string; // 'pending', 'confirmed', 'cancelled'
+  declare paymentId: string;
+  declare amountPaid: number;
 }
 
 Booking.init(
@@ -63,6 +65,14 @@ Booking.init(
     status: {
       type: DataTypes.STRING,
       defaultValue: 'confirmed',
+    },
+    paymentId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    amountPaid: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
   },
   {

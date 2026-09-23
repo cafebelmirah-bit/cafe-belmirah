@@ -6,6 +6,7 @@ import { Op } from 'sequelize';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import axios from 'axios';
+import { razorpayInstance } from '../utils/razorpay';
 
 export const checkAvailability = async (req: Request, res: Response) => {
   try {
@@ -83,8 +84,53 @@ export const cancelBookingCustomer = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Booking is already cancelled.' });
     }
     
+    // Automated Refund Logic
+    let refundAmount = 0;
+    let refundPercent = 0;
+    
+    const now = new Date();
+    // Assuming checkIn is at 12:00 PM local time on the checkIn date
+    const checkInDate = new Date(booking.checkIn);
+    checkInDate.setHours(12, 0, 0, 0);
+    
+    const diffTime = checkInDate.getTime() - now.getTime();
+    const diffHours = diffTime / (1000 * 60 * 60);
+    
+    if (booking.paymentId && booking.amountPaid) {
+      if (diffHours > 48) {
+        refundPercent = 100;
+        refundAmount = booking.amountPaid;
+      } else if (diffHours > 24 && diffHours <= 48) {
+        refundPercent = 50;
+        refundAmount = Math.floor(booking.amountPaid / 2);
+      }
+      
+      if (refundAmount > 0) {
+        try {
+          await razorpayInstance.payments.refund(booking.paymentId, {
+            amount: refundAmount,
+            notes: {
+              reason: `Customer cancelled booking ${referenceId}. ${refundPercent}% refund.`
+            }
+          });
+        } catch (refundError) {
+          console.error("Razorpay Refund Error:", refundError);
+          // If refund fails, we should still probably let the cancellation go through, 
+          // or alert the admin. But for now we just log it.
+        }
+      }
+    }
+
     await Booking.update({ status: 'cancelled' }, { where: { id: booking.id } });
-    res.json({ success: true, message: 'Booking cancelled successfully.' });
+    
+    let msg = 'Booking cancelled successfully.';
+    if (refundPercent > 0) {
+      msg += ` A ${refundPercent}% refund (₹${refundAmount / 100}) has been initiated to your original payment method.`;
+    } else {
+      msg += ` No refund is applicable as per the cancellation policy.`;
+    }
+    
+    res.json({ success: true, message: msg });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }

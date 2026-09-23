@@ -11,7 +11,7 @@ export default function Footer() {
     Stay: (content.footer_links_stay || 'Royal Glamping Tent, Forest Cabin, Mountain Villa, Luxury Suite').split(',').map(s => s.trim()),
     Dining: (content.footer_links_dining || 'Continental Café, Outdoor Dining, BBQ Nights, Private Chef').split(',').map(s => s.trim()),
     Experiences: (content.footer_links_experiences || 'Campfire Nights, Stargazing, Nature Walks, Photography').split(',').map(s => s.trim()),
-    Company: (content.footer_links_company || 'About Us, Careers, Track Booking').split(',').map(s => s.trim()),
+    Company: (content.footer_links_company || 'About Us, Careers, Track Booking, Policies').split(',').map(s => s.trim()),
   };
 
   const socialLinks = [
@@ -67,6 +67,10 @@ export default function Footer() {
                   <li key={link}>
                     {link === 'Track Booking' ? (
                       <a href="/track" className="text-cream/40 text-sm hover:text-cream/80 transition-colors duration-300">
+                        {link}
+                      </a>
+                    ) : link === 'Policies' ? (
+                      <a href="/policies" className="text-cream/40 text-sm hover:text-cream/80 transition-colors duration-300">
                         {link}
                       </a>
                     ) : (

@@ -63,6 +63,7 @@ function BookingTab() {
   const [bookingData, setBookingData] = useState<BookingForm | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'full' | 'advance'>('full');
   const [dynamicRooms, setDynamicRooms] = useState<any[]>([]);
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
 
   useEffect(() => {
     fetchRooms().then(data => setDynamicRooms(data)).catch(console.error);
@@ -116,6 +117,10 @@ function BookingTab() {
   const onPaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bookingData) return;
+    if (!agreedToPolicy) {
+      toast.error('You must agree to the Refund & Cancellation Policy.');
+      return;
+    }
     
     try {
       const isLoaded = await loadRazorpay();
@@ -216,9 +221,21 @@ function BookingTab() {
           <div className="bg-black/20 p-6 rounded-lg border border-black/10">
             <h4 className="text-gold font-body uppercase tracking-wider text-xs mb-4">Secure Payment Info</h4>
             <p className="text-sm text-cream/70 mb-4">You will be redirected to Razorpay's secure checkout window to complete your transaction via UPI, Cards, or NetBanking.</p>
+            
+            <label className="flex items-start gap-3 mt-4 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={agreedToPolicy}
+                onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                className="mt-1 accent-gold"
+              />
+              <span className="text-sm text-cream/70">
+                I have read and agree to the <a href="/policies" target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">Refund & Cancellation Policy</a>.
+              </span>
+            </label>
           </div>
 
-          <button type="submit" disabled={isSubmitting} className="btn-gold w-full py-4">
+          <button type="submit" disabled={isSubmitting || !agreedToPolicy} className="btn-gold w-full py-4 disabled:opacity-50 disabled:cursor-not-allowed">
             {isSubmitting ? 'Processing...' : `Pay ₹${amountToPay.toLocaleString()} & Confirm`}
           </button>
         </form>

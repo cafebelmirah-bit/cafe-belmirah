@@ -44,12 +44,28 @@ export const verifyPayment = async (req: Request, res: Response) => {
     let referenceId = '';
     let detailsStr = '';
     
+    let amountPaid = null;
+    if (razorpay_payment_id) {
+      try {
+        const payment = await razorpayInstance.payments.fetch(razorpay_payment_id);
+        amountPaid = payment.amount; // in paisa
+      } catch (err) {
+        console.error("Error fetching payment details from razorpay", err);
+      }
+    }
+
+    const enhancedBookingData = {
+      ...bookingData,
+      paymentId: razorpay_payment_id,
+      amountPaid
+    };
+    
     if (type === 'booking') {
-      const booking = await Booking.create(bookingData);
+      const booking = await Booking.create(enhancedBookingData);
       referenceId = booking.referenceId;
       detailsStr = `Room: ${booking.roomType}<br>Check-in: ${booking.checkIn}<br>Check-out: ${booking.checkOut}<br>Guests: ${booking.guests}`;
     } else {
-      const reservation = await Reservation.create(bookingData);
+      const reservation = await Reservation.create(enhancedBookingData);
       referenceId = reservation.referenceId;
       detailsStr = `Date: ${reservation.date}<br>Time: ${reservation.time}<br>Guests: ${reservation.guests}`;
     }

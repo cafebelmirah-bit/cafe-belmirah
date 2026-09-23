@@ -51,8 +51,8 @@ const startServer = async () => {
     console.log('Database connected successfully.');
 
     // Sync models (in production, use migrations)
-    await Booking.sync();
-    await Reservation.sync();
+    await Booking.sync({ alter: true });
+    await Reservation.sync({ alter: true });
     await MenuItem.sync();
     await Room.sync();
     await Testimonial.sync();
