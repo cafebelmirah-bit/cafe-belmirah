@@ -481,6 +481,7 @@ function ReservationTab() {
 
 export default function Booking() {
   const [activeTab, setActiveTab] = useState<'booking' | 'reservation'>('booking');
+  const [resetKey, setResetKey] = useState(0);
 
   return (
     <section id="booking" className="section-padding bg-dark-100 relative overflow-hidden">
@@ -528,7 +529,13 @@ export default function Booking() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  if (activeTab === tab.id) {
+                    setResetKey(prev => prev + 1);
+                  } else {
+                    setActiveTab(tab.id);
+                  }
+                }}
                 className={`flex-1 py-4 text-xs font-semibold tracking-wider uppercase transition-all duration-300 ${
                   activeTab === tab.id
                     ? 'bg-gold text-dark'
@@ -542,7 +549,7 @@ export default function Booking() {
 
           {/* Form */}
           <motion.div
-            key={activeTab}
+            key={`${activeTab}-${resetKey}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
