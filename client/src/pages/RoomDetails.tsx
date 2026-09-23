@@ -81,7 +81,7 @@ export default function RoomDetails() {
       <main className="flex-1">
         
         {/* Full-Width Media Section */}
-        <div className="relative w-full h-[60vh] md:h-[80vh] bg-black">
+        <div className="relative w-full h-[40vh] md:h-[60vh] bg-black">
 
           <Swiper
             modules={[Pagination, Navigation, Autoplay]}
@@ -96,7 +96,7 @@ export default function RoomDetails() {
                 <video 
                   src={room.videoUrl} 
                   controls
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
                   poster={room.image || (room.images && room.images[0])}
                 />
               </SwiperSlide>
@@ -104,12 +104,12 @@ export default function RoomDetails() {
             {room.images && room.images.length > 0 ? (
               room.images.map((img: string, i: number) => (
                 <SwiperSlide key={i}>
-                  <img src={img} alt={`${room.name} view ${i + 1}`} className="w-full h-full object-cover" />
+                  <img src={img} alt={`${room.name} view ${i + 1}`} className="w-full h-full object-cover object-center" />
                 </SwiperSlide>
               ))
             ) : (
               <SwiperSlide>
-                <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
+                <img src={room.image} alt={room.name} className="w-full h-full object-cover object-center" />
               </SwiperSlide>
             )}
           </Swiper>
