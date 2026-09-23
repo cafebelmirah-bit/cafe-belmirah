@@ -80,6 +80,7 @@ export default function AdminBookingsTab() {
               <div className={`absolute top-0 left-0 w-1 h-full ${b.status === 'confirmed' ? 'bg-green-500' : b.status === 'cancelled' ? 'bg-red-500' : 'bg-yellow-500'}`} />
               <div className="flex justify-between items-start mb-4">
                 <div>
+                  <div className="font-mono text-xs text-gold mb-1">{b.referenceId}</div>
                   <h3 className="text-cream font-bold">{b.name}</h3>
                   <p className="text-cream/60 text-sm">{b.email} • {b.phone}</p>
                 </div>
@@ -114,6 +115,7 @@ export default function AdminBookingsTab() {
               <div className={`absolute top-0 left-0 w-1 h-full ${r.status === 'confirmed' ? 'bg-green-500' : r.status === 'cancelled' ? 'bg-red-500' : 'bg-yellow-500'}`} />
               <div className="flex justify-between items-start mb-4">
                 <div>
+                  <div className="font-mono text-xs text-gold mb-1">{r.referenceId}</div>
                   <h3 className="text-cream font-bold">{r.name}</h3>
                   <p className="text-cream/60 text-sm">{r.email} • {r.phone}</p>
                 </div>
