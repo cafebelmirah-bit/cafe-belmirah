@@ -18,6 +18,41 @@ import { Navigate } from 'react-router-dom';
 
 gsap.registerPlugin(ScrollTrigger);
 
+import ComingSoon from './pages/ComingSoon';
+import { useLocation } from 'react-router-dom';
+
+const IS_COMING_SOON = true;
+
+function AppRoutes() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  if (IS_COMING_SOON && !isAdminRoute) {
+    return (
+      <Routes>
+        <Route path="*" element={<ComingSoon />} />
+      </Routes>
+    );
+  }
+
+  return (
+    <>
+      <ScrollProgress />
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/stay/:id" element={<RoomDetails />} />
+        <Route path="/track" element={<TrackBooking />} />
+        <Route path="/policies" element={<Policies />} />
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      </Routes>
+      <Footer />
+    </>
+  );
+}
+
 function App() {
   useEffect(() => {
     // Initialize Lenis smooth scrolling
@@ -46,25 +81,7 @@ function App() {
       {/* Page loader */}
       <PageLoader />
 
-      {/* Scroll progress */}
-      <ScrollProgress />
-
-      {/* Navigation */}
-      <Navbar />
-
-      {/* Routes */}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/stay/:id" element={<RoomDetails />} />
-        <Route path="/track" element={<TrackBooking />} />
-        <Route path="/policies" element={<Policies />} />
-        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      </Routes>
-
-      {/* Footer */}
-      <Footer />
+      <AppRoutes />
     </BrowserRouter>
   );
 }
