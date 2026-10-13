@@ -131,7 +131,7 @@ export default function AdminRoomsTab() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Price (₹)</label>
+                <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Price (₹ per person)</label>
                 <input required type="number" value={newRoom.price} onChange={e => setNewRoom({...newRoom, price: e.target.value})} className="luxury-input w-full" />
               </div>
               <div>
@@ -216,7 +216,7 @@ export default function AdminRoomsTab() {
               <div className="flex-1 min-w-0 flex flex-col">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-display text-xl text-cream truncate">{room.name}</h4>
-                  <p className="text-gold text-lg font-semibold whitespace-nowrap ml-4">₹{room.price}/night</p>
+                  <p className="text-gold text-lg font-semibold whitespace-nowrap ml-4">₹{room.price}/person</p>
                 </div>
                 <div className="flex gap-4 text-xs text-cream/60 mb-2">
                   <span>Capacity: {room.capacity}</span>

@@ -278,22 +278,23 @@ export const getInvoice = async (req: Request, res: Response) => {
     
     if (type === 'booking') {
       const room: any = await Room.findOne({ where: { name: booking.roomType } });
-      const pricePerNight = room ? room.price : 0;
+      const pricePerPerson = room ? room.price : 0;
       
       const start = new Date(booking.checkIn);
       const end = new Date(booking.checkOut);
       const diffTime = Math.abs(end.getTime() - start.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+      const guests = booking.guests || 1;
       
-      totalAmount = pricePerNight * diffDays;
+      totalAmount = pricePerPerson * guests * diffDays;
       const advancePaid = totalAmount * 0.3;
       
       doc.text(`Glamping Stay - ${booking.roomType}`, 50, 320 + yShift);
       doc.fillColor('#666666').fontSize(8).text(`Check-In: ${booking.checkIn} | Check-Out: ${booking.checkOut}`, 50, 335 + yShift);
       
       doc.fillColor('#333333').fontSize(10);
-      doc.text(`${diffDays} Night(s)`, 280, 320 + yShift, { width: 90, align: 'right' });
-      doc.text(`Rs. ${pricePerNight.toLocaleString()}`, 370, 320 + yShift, { width: 90, align: 'right' });
+      doc.text(`${guests} Guest(s)${diffDays > 1 ? ` / ${diffDays} Night(s)` : ''}`, 280, 320 + yShift, { width: 90, align: 'right' });
+      doc.text(`Rs. ${pricePerPerson.toLocaleString()} / person`, 370, 320 + yShift, { width: 90, align: 'right' });
       doc.text(`Rs. ${totalAmount.toLocaleString()}`, 470, 320 + yShift, { width: 80, align: 'right' });
       
       generateHr(360 + yShift);

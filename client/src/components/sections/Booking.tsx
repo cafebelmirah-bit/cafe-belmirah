@@ -101,14 +101,15 @@ function BookingTab() {
     const room = dynamicRooms.find(r => r.name === watchRoomType);
     if (!room) return 0;
     
-    const pricePerNight = room.price || 0;
+    const pricePerPerson = room.price || 0;
+    const totalGuests = Math.max(1, adults + children);
     
     const start = new Date(watchCheckIn);
     const end = new Date(watchCheckOut);
     const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
     
-    return pricePerNight * (diffDays || 1); // at least 1 night
+    return pricePerPerson * totalGuests * diffDays;
   };
 
   const onBookingSubmit = async (data: BookingForm) => {
@@ -148,8 +149,17 @@ function BookingTab() {
         rawPhone = '91' + rawPhone;
       }
 
+      const start = new Date(data.checkIn);
+      const end = new Date(data.checkOut);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
       const total = calculateTotal();
       const guestDetails = `${adults} Adult${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}`;
+      const roomPrice = selectedRoom?.price || 0;
+      const rateBreakdown = diffDays > 1
+        ? `(₹${roomPrice.toLocaleString()}/person × ${totalGuests} guests × ${diffDays} nights)`
+        : `(₹${roomPrice.toLocaleString()}/person × ${totalGuests} guests)`;
 
       // 4. Format WhatsApp message
       const message = 
@@ -161,9 +171,9 @@ function BookingTab() {
 ✉️ *Email:* ${data.email}
 🏡 *Room Type:* ${data.roomType}
 📅 *Check-In:* ${data.checkIn}
-📅 *Check-Out:* ${data.checkOut}
+📅 *Check-Out:* ${data.checkOut}${diffDays > 1 ? ` (${diffDays} nights)` : ''}
 👥 *Guests:* ${guestDetails} (Total: ${totalGuests})
-💰 *Estimated Total:* ₹${total.toLocaleString()}
+💰 *Estimated Total:* ₹${total.toLocaleString()} ${rateBreakdown}
 📝 *Special Requests:* ${data.specialRequests || 'None'}`;
 
       const waLink = `https://wa.me/${rawPhone}?text=${encodeURIComponent(message)}`;
@@ -205,7 +215,7 @@ function BookingTab() {
           <select {...register('roomType', { required: true })} className="luxury-input">
             <option value="">Select a room...</option>
             {dynamicRooms.map(r => (
-              <option key={r.id} value={r.name}>{r.name} — ₹{r.price}/night (Max {r.capacity} guests)</option>
+              <option key={r.id} value={r.name}>{r.name} — ₹{r.price}/person (Max {r.capacity} guests)</option>
             ))}
           </select>
         </div>
@@ -255,7 +265,17 @@ function BookingTab() {
         <div className="bg-black/20 p-4 rounded-lg border border-gold/20 flex justify-between items-center">
           <div>
             <span className="text-xs uppercase tracking-wider text-cream/50 block">Estimated Amount</span>
-            <span className="text-sm text-cream/80">{watchRoomType}</span>
+            <span className="text-sm text-cream/80">
+              {watchRoomType} ({adults + children} {adults + children > 1 ? 'guests' : 'guest'}
+              {(() => {
+                if (!watchCheckIn || !watchCheckOut) return '';
+                const start = new Date(watchCheckIn);
+                const end = new Date(watchCheckOut);
+                const diffTime = Math.abs(end.getTime() - start.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+                return diffDays > 1 ? ` × ${diffDays} nights` : '';
+              })()})
+            </span>
           </div>
           <span className="font-display text-2xl text-gold">₹{calculateTotal().toLocaleString()}</span>
         </div>

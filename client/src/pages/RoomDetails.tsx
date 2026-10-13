@@ -189,7 +189,7 @@ export default function RoomDetails() {
                   <div className="font-display text-2xl text-gold mb-2">{room.name}</div>
                   <div className="font-body text-xs text-cream/50 tracking-widest uppercase mb-2">Starting from</div>
                   <div className="font-display text-4xl text-cream">₹{Number(room.price).toLocaleString()}</div>
-                  <div className="font-body text-xs text-cream/50 tracking-widest uppercase mt-2">per night</div>
+                  <div className="font-body text-xs text-cream/50 tracking-widest uppercase mt-2">per person</div>
                 </div>
 
                 <div className="bg-dark/50 rounded-lg p-4 mb-6 border border-white/5">
