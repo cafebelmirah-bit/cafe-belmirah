@@ -225,12 +225,6 @@ export default function Hero() {
           </button>
           <button
             className="btn-outline-gold opacity-0 w-full sm:w-auto min-w-[180px]"
-            onClick={() => scrollTo('#booking')}
-          >
-            Reserve a Table
-          </button>
-          <button
-            className="btn-outline-gold opacity-0 w-full sm:w-auto min-w-[180px]"
             onClick={() => scrollTo('#cafe')}
           >
             Explore Menu

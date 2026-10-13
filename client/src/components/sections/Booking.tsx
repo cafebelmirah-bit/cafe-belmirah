@@ -2,22 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import type { BookingForm, ReservationForm } from '../../types';
-import { fetchRooms, checkAvailability, submitReservation, api, API_URL } from '../../lib/api';
+import { fetchRooms, checkAvailability, submitBooking, submitReservation, API_URL } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { FaWhatsapp } from 'react-icons/fa';
-
-// Utility to load Razorpay script dynamically
-const loadRazorpay = () => {
-  return new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
-
 
 const timeSlots = ['12:00 PM', '1:00 PM', '2:00 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM'];
 const occasions = ['None', 'Anniversary', 'Birthday', 'Honeymoon', 'Business Dinner', 'Proposal', 'Other'];
@@ -31,11 +19,11 @@ function SuccessMessage({ type, referenceId, whatsappUrl }: { type: 'booking' | 
     >
       <div className="text-6xl mb-4">{type === 'booking' ? '🏕️' : '🍽️'}</div>
       <h3 className="font-display text-3xl text-cream mb-2">
-        {type === 'booking' ? 'Booking Confirmed!' : 'Table Reservation Sent!'}
+        {type === 'booking' ? 'Booking Request Sent!' : 'Table Reservation Sent!'}
       </h3>
       <p className="text-cream/50 mb-6">
         {type === 'booking' 
-          ? 'Your stay has been instantly confirmed! We have sent the details to your email.'
+          ? 'Your stay booking request has been submitted and forwarded to our team via WhatsApp!'
           : 'Your table reservation request has been received and forwarded to our team via WhatsApp!'}
       </p>
       <div className="bg-black/5 p-4 rounded-lg inline-block text-left mb-6">
@@ -43,50 +31,33 @@ function SuccessMessage({ type, referenceId, whatsappUrl }: { type: 'booking' | 
         <span className="font-mono text-xl text-cream tracking-widest">{referenceId}</span>
       </div>
       <p className="text-sm text-cream/40 mb-6">
-        {type === 'booking'
-          ? 'You can use this Reference ID to track your booking status.'
-          : 'Our team will confirm your table shortly. Keep this Reference ID for your records.'}
+        Our team will confirm your reservation shortly. You can use this Reference ID to track your status.
       </p>
       <div className="glass-gold inline-block px-6 py-3 mb-6">
         <p className="text-gold text-sm">
-          {type === 'booking' 
-            ? 'A confirmation email has been sent to your inbox.' 
-            : 'Details sent to Café Belmirah on WhatsApp.'}
+          Details sent to Café Belmirah on WhatsApp.
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-        {type === 'booking' ? (
+        {whatsappUrl && (
           <a 
-            href={`${API_URL}/invoice/${referenceId}/download.pdf`} 
+            href={whatsappUrl} 
             target="_blank" 
             rel="noreferrer"
-            className="btn-gold inline-flex items-center gap-2"
+            className="bg-[#25D366] hover:bg-[#20ba59] text-white font-body font-semibold px-6 py-3 rounded text-sm transition-all inline-flex items-center gap-2 shadow-lg hover:shadow-[#25D366]/20"
           >
-            Download PDF Invoice
+            <FaWhatsapp size={18} />
+            Open WhatsApp Chat
           </a>
-        ) : (
-          <>
-            {whatsappUrl && (
-              <a 
-                href={whatsappUrl} 
-                target="_blank" 
-                rel="noreferrer"
-                className="bg-[#25D366] hover:bg-[#20ba59] text-white font-body font-semibold px-6 py-3 rounded text-sm transition-all inline-flex items-center gap-2 shadow-lg hover:shadow-[#25D366]/20"
-              >
-                <FaWhatsapp size={18} />
-                Open WhatsApp Chat
-              </a>
-            )}
-            <a 
-              href={`${API_URL}/invoice/${referenceId}/download.pdf`} 
-              target="_blank" 
-              rel="noreferrer"
-              className="btn-outline-gold inline-flex items-center gap-2 text-sm"
-            >
-              Download Receipt
-            </a>
-          </>
         )}
+        <a 
+          href={`${API_URL}/invoice/${referenceId}/download.pdf`} 
+          target="_blank" 
+          rel="noreferrer"
+          className="btn-outline-gold inline-flex items-center gap-2 text-sm"
+        >
+          Download PDF Invoice
+        </a>
       </div>
     </motion.div>
   );
@@ -94,12 +65,12 @@ function SuccessMessage({ type, referenceId, whatsappUrl }: { type: 'booking' | 
 
 function BookingTab() {
   const [submittedId, setSubmittedId] = useState<string | null>(null);
-  const [guests, setGuests] = useState(2);
-  const [step, setStep] = useState<1 | 2>(1);
-  const [bookingData, setBookingData] = useState<BookingForm | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'full' | 'advance'>('full');
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
   const [dynamicRooms, setDynamicRooms] = useState<any[]>([]);
-  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const { content } = useSiteContent();
 
   useEffect(() => {
     fetchRooms().then(data => setDynamicRooms(data)).catch(console.error);
@@ -115,10 +86,15 @@ function BookingTab() {
   const maxGuests = selectedRoom ? selectedRoom.capacity : 8;
 
   useEffect(() => {
-    if (selectedRoom && guests > selectedRoom.capacity) {
-      setGuests(selectedRoom.capacity);
+    if (selectedRoom && (adults + children) > selectedRoom.capacity) {
+      if (adults > selectedRoom.capacity) {
+        setAdults(selectedRoom.capacity);
+        setChildren(0);
+      } else {
+        setChildren(selectedRoom.capacity - adults);
+      }
     }
-  }, [watchRoomType, selectedRoom, guests]);
+  }, [watchRoomType, selectedRoom, adults, children]);
 
   const calculateTotal = () => {
     if (!watchRoomType || !watchCheckIn || !watchCheckOut) return 0;
@@ -135,152 +111,77 @@ function BookingTab() {
     return pricePerNight * (diffDays || 1); // at least 1 night
   };
 
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const onBookingSubmit = async (data: BookingForm) => {
+    const totalGuests = adults + children;
+    if (totalGuests <= 0) {
+      toast.error('Please specify at least 1 guest.');
+      return;
+    }
+    if (selectedRoom && totalGuests > selectedRoom.capacity) {
+      toast.error(`This property accommodates up to ${selectedRoom.capacity} guests.`);
+      return;
+    }
 
-  const onStep1Submit = async (data: BookingForm) => {
     setCheckingAvailability(true);
     try {
-      await checkAvailability(data.roomType, data.checkIn, data.checkOut, guests);
-      setBookingData(data);
-      setStep(2);
+      // 1. Verify availability
+      await checkAvailability(data.roomType, data.checkIn, data.checkOut, totalGuests);
+
+      // 2. Submit booking to backend database
+      const specialReq = [
+        data.specialRequests,
+        children > 0 ? `Party: ${adults} Adults, ${children} Children` : null
+      ].filter(Boolean).join(' | ');
+
+      const res = await submitBooking({
+        ...data,
+        guests: totalGuests,
+        specialRequests: specialReq
+      });
+
+      const refId = res.data?.referenceId || `BEL-${Date.now().toString(36).toUpperCase()}`;
+      setSubmittedId(refId);
+
+      // 3. Format owner phone number
+      let rawPhone = (content.contact_phone || '9511896490').replace(/[^0-9]/g, '');
+      if (rawPhone.length === 10) {
+        rawPhone = '91' + rawPhone;
+      }
+
+      const total = calculateTotal();
+      const guestDetails = `${adults} Adult${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}`;
+
+      // 4. Format WhatsApp message
+      const message = 
+`🏕️ *New Stay Booking Request — Café Belmirah*
+
+🔖 *Reference ID:* ${refId}
+👤 *Name:* ${data.name}
+📱 *Phone:* ${data.phone}
+✉️ *Email:* ${data.email}
+🏡 *Room Type:* ${data.roomType}
+📅 *Check-In:* ${data.checkIn}
+📅 *Check-Out:* ${data.checkOut}
+👥 *Guests:* ${guestDetails} (Total: ${totalGuests})
+💰 *Estimated Total:* ₹${total.toLocaleString()}
+📝 *Special Requests:* ${data.specialRequests || 'None'}`;
+
+      const waLink = `https://wa.me/${rawPhone}?text=${encodeURIComponent(message)}`;
+      setWhatsappUrl(waLink);
+
+      toast.success('Booking submitted! Forwarding to WhatsApp...');
+      window.open(waLink, '_blank');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'This property is fully booked for the selected dates.');
+      toast.error(error.response?.data?.error || 'Failed to submit booking. Please try again.');
     } finally {
       setCheckingAvailability(false);
     }
   };
 
-  const onPaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bookingData) return;
-    if (!agreedToPolicy) {
-      toast.error('You must agree to the Refund & Cancellation Policy.');
-      return;
-    }
-    
-    try {
-      const isLoaded = await loadRazorpay();
-      if (!isLoaded) {
-        toast.error('Razorpay SDK failed to load. Are you online?');
-        return;
-      }
-
-      const total = calculateTotal();
-      const amountToPay = paymentMethod === 'full' ? total : total * 0.3;
-      
-      const { data: { order } } = await api.post('/payment/create-order', {
-        amount: amountToPay,
-        receipt: `receipt_booking_${Date.now()}`
-      });
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'YOUR_RAZORPAY_KEY_ID',
-        amount: order.amount,
-        currency: order.currency,
-        name: 'Café Belmirah',
-        description: 'Stay Booking',
-        order_id: order.id,
-        handler: async function (response: any) {
-          try {
-            const verifyRes = await api.post('/payment/verify', {
-              ...response,
-              bookingData: { ...bookingData, guests },
-              type: 'booking'
-            });
-            if (verifyRes.data.success) {
-              setSubmittedId(verifyRes.data.referenceId);
-              toast.success('Booking requested successfully! Check your email.');
-            }
-          } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Payment verification failed.');
-          }
-        },
-        prefill: {
-          name: bookingData.name,
-          email: bookingData.email,
-          contact: bookingData.phone,
-        },
-        theme: {
-          color: '#C9A84C'
-        }
-      };
-
-      const rzp1 = new (window as any).Razorpay(options);
-      rzp1.on('payment.failed', function (response: any) {
-        toast.error('Payment failed: ' + response.error.description);
-      });
-      rzp1.open();
-
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to initiate payment.');
-    }
-  };
-
-  if (submittedId) return <SuccessMessage type="booking" referenceId={submittedId} />;
-
-  if (step === 2) {
-    const total = calculateTotal();
-    const amountToPay = paymentMethod === 'full' ? total : total * 0.3; // 30% advance
-    
-    return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-        <button onClick={() => setStep(1)} className="text-gold text-sm uppercase tracking-wider mb-4 hover:text-cream transition-colors">← Back to Details</button>
-        <h3 className="font-display text-2xl text-cream mb-6">Complete Payment</h3>
-        
-        <div className="bg-black/20 p-6 rounded-lg border border-black/10 mb-6">
-          <h4 className="text-gold font-body uppercase tracking-wider text-xs mb-4">Booking Summary</h4>
-          <div className="space-y-2 text-sm text-cream/80">
-            <div className="flex justify-between"><span>Room:</span> <span>{watchRoomType}</span></div>
-            <div className="flex justify-between"><span>Dates:</span> <span>{watchCheckIn} to {watchCheckOut}</span></div>
-            <div className="flex justify-between font-bold pt-2 border-t border-black/10 mt-2"><span>Total Amount:</span> <span>₹{total.toLocaleString()}</span></div>
-          </div>
-        </div>
-
-        <div className="space-y-4 mb-6">
-          <label className="flex items-center gap-3 cursor-pointer p-4 border border-black/10 rounded-lg hover:bg-black/10 transition-colors">
-            <input type="radio" name="payment" checked={paymentMethod === 'full'} onChange={() => setPaymentMethod('full')} className="accent-gold" />
-            <div>
-              <p className="text-cream font-bold">Pay Full Amount</p>
-              <p className="text-cream/50 text-xs">₹{total.toLocaleString()}</p>
-            </div>
-          </label>
-          <label className="flex items-center gap-3 cursor-pointer p-4 border border-black/10 rounded-lg hover:bg-black/10 transition-colors">
-            <input type="radio" name="payment" checked={paymentMethod === 'advance'} onChange={() => setPaymentMethod('advance')} className="accent-gold" />
-            <div>
-              <p className="text-cream font-bold">Pay 30% Advance</p>
-              <p className="text-cream/50 text-xs">₹{(total * 0.3).toLocaleString()} (Pay remaining at property)</p>
-            </div>
-          </label>
-        </div>
-
-        <form onSubmit={onPaymentSubmit} className="space-y-6">
-          <div className="bg-black/20 p-6 rounded-lg border border-black/10">
-            <h4 className="text-gold font-body uppercase tracking-wider text-xs mb-4">Secure Payment Info</h4>
-            <p className="text-sm text-cream/70 mb-4">You will be redirected to Razorpay's secure checkout window to complete your transaction via UPI, Cards, or NetBanking.</p>
-            
-            <label className="flex items-start gap-3 mt-4 cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={agreedToPolicy}
-                onChange={(e) => setAgreedToPolicy(e.target.checked)}
-                className="mt-1 accent-gold"
-              />
-              <span className="text-sm text-cream/70">
-                I have read and agree to the <a href="/policies" target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">Refund & Cancellation Policy</a>.
-              </span>
-            </label>
-          </div>
-
-          <button type="submit" disabled={isSubmitting || !agreedToPolicy} className="btn-gold w-full py-4 disabled:opacity-50 disabled:cursor-not-allowed">
-            {isSubmitting ? 'Processing...' : `Pay ₹${amountToPay.toLocaleString()} & Confirm`}
-          </button>
-        </form>
-      </motion.div>
-    );
-  }
+  if (submittedId) return <SuccessMessage type="booking" referenceId={submittedId} whatsappUrl={whatsappUrl || undefined} />;
 
   return (
-    <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onBookingSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Full Name</label>
@@ -304,27 +205,38 @@ function BookingTab() {
           <select {...register('roomType', { required: true })} className="luxury-input">
             <option value="">Select a room...</option>
             {dynamicRooms.map(r => (
-              <option key={r.id} value={r.name}>{r.name} — ₹{r.price}/night</option>
+              <option key={r.id} value={r.name}>{r.name} — ₹{r.price}/night (Max {r.capacity} guests)</option>
             ))}
           </select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Check-In</label>
           <input {...register('checkIn', { required: true })} className="luxury-input" type="date" min={new Date().toISOString().split('T')[0]} />
         </div>
         <div>
           <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Check-Out</label>
-          <input {...register('checkOut', { required: true })} className="luxury-input" type="date" min={new Date().toISOString().split('T')[0]} />
+          <input {...register('checkOut', { required: true })} className="luxury-input" type="date" min={watchCheckIn || new Date().toISOString().split('T')[0]} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Adults (12+ yrs)</label>
+          <div className="flex items-center gap-3 luxury-input">
+            <button type="button" onClick={() => setAdults(a => Math.max(1, a - 1))} className="text-gold text-lg w-6 text-center">−</button>
+            <span className="flex-1 text-center text-cream">{adults} Adult{adults > 1 ? 's' : ''}</span>
+            <button type="button" onClick={() => setAdults(a => Math.min(Math.max(1, maxGuests - children), a + 1))} className="text-gold text-lg w-6 text-center">+</button>
+          </div>
         </div>
         <div>
-          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Guests</label>
+          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Children (under 12 yrs)</label>
           <div className="flex items-center gap-3 luxury-input">
-            <button type="button" onClick={() => setGuests(g => Math.max(1, g - 1))} className="text-gold text-lg w-6 text-center">−</button>
-            <span className="flex-1 text-center text-cream">{guests} Guest{guests > 1 ? 's' : ''}</span>
-            <button type="button" onClick={() => setGuests(g => Math.min(maxGuests, g + 1))} className="text-gold text-lg w-6 text-center">+</button>
+            <button type="button" onClick={() => setChildren(c => Math.max(0, c - 1))} className="text-gold text-lg w-6 text-center">−</button>
+            <span className="flex-1 text-center text-cream">{children} Child{children !== 1 ? 'ren' : ''}</span>
+            <button type="button" onClick={() => setChildren(c => Math.min(Math.max(0, maxGuests - adults), c + 1))} className="text-gold text-lg w-6 text-center">+</button>
           </div>
         </div>
       </div>
@@ -335,14 +247,29 @@ function BookingTab() {
           {...register('specialRequests')}
           className="luxury-input resize-none"
           rows={3}
-          placeholder="Anniversary setup, dietary requirements, early check-in..."
+          placeholder="Anniversary setup, dietary requirements, early check-in, extra bed..."
         />
+      </div>
+
+      {calculateTotal() > 0 && (
+        <div className="bg-black/20 p-4 rounded-lg border border-gold/20 flex justify-between items-center">
+          <div>
+            <span className="text-xs uppercase tracking-wider text-cream/50 block">Estimated Amount</span>
+            <span className="text-sm text-cream/80">{watchRoomType}</span>
+          </div>
+          <span className="font-display text-2xl text-gold">₹{calculateTotal().toLocaleString()}</span>
+        </div>
+      )}
+
+      <div className="bg-black/20 p-4 rounded-lg border border-black/10 flex items-center gap-3 text-sm text-cream/70">
+        <FaWhatsapp size={24} className="text-[#25D366] flex-shrink-0" />
+        <span>Your stay booking will be sent directly to our team via WhatsApp for instant confirmation. No upfront payment required.</span>
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting || checkingAvailability}
-        className="btn-gold w-full justify-center py-4"
+        className="btn-gold w-full justify-center py-4 inline-flex items-center gap-2"
       >
         {checkingAvailability ? (
           <span className="flex items-center gap-2">
@@ -352,37 +279,39 @@ function BookingTab() {
         ) : isSubmitting ? (
           <span className="flex items-center gap-2">
             <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}>◌</motion.span>
-            Processing...
+            Submitting...
           </span>
-        ) : 'Proceed to Payment →'}
+        ) : (
+          <span className="inline-flex items-center gap-2">
+            <FaWhatsapp size={18} />
+            Book Your Stay via WhatsApp
+          </span>
+        )}
       </button>
     </form>
   );
 }
 
-// Table reservation component (WhatsApp direct booking)
+// Table reservation component (dormant, preserved for future reactivation)
 export function ReservationTab() {
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
-  const [guests, setGuests] = useState(2);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
   const { content } = useSiteContent();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ReservationForm>();
 
   const onReservationSubmit = async (data: ReservationForm) => {
     try {
-      // 1. Submit reservation to backend so it's recorded and visible in Admin Dashboard
-      const res = await submitReservation({ ...data, guests });
+      const totalGuests = adults + children;
+      const res = await submitReservation({ ...data, guests: totalGuests });
       const refId = res.data?.referenceId || `BEL-${Date.now().toString(36).toUpperCase()}`;
       setSubmittedId(refId);
 
-      // 2. Format owner's phone number for WhatsApp
       let rawPhone = (content.contact_phone || '9511896490').replace(/[^0-9]/g, '');
-      if (rawPhone.length === 10) {
-        rawPhone = '91' + rawPhone;
-      }
+      if (rawPhone.length === 10) rawPhone = '91' + rawPhone;
 
-      // 3. Format WhatsApp reservation message
       const message = 
 `🍽️ *New Table Reservation Request — Café Belmirah*
 
@@ -392,7 +321,7 @@ export function ReservationTab() {
 ✉️ *Email:* ${data.email}
 📅 *Date:* ${data.date}
 ⏰ *Time:* ${data.time}
-👥 *Guests:* ${guests}
+👥 *Guests:* ${adults} Adults${children > 0 ? `, ${children} Children` : ''} (Total: ${totalGuests})
 🎉 *Occasion:* ${data.occasion || 'None'}
 📝 *Special Requests:* ${data.specialRequests || 'None'}`;
 
@@ -428,7 +357,7 @@ export function ReservationTab() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Date</label>
           <input {...register('date', { required: true })} className="luxury-input" type="date" min={new Date().toISOString().split('T')[0]} />
@@ -440,12 +369,23 @@ export function ReservationTab() {
             {timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Guests</label>
+          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Adults (12+ yrs)</label>
           <div className="flex items-center gap-3 luxury-input">
-            <button type="button" onClick={() => setGuests(g => Math.max(1, g - 1))} className="text-gold text-lg w-6 text-center">−</button>
-            <span className="flex-1 text-center text-cream">{guests} Guest{guests > 1 ? 's' : ''}</span>
-            <button type="button" onClick={() => setGuests(g => Math.min(20, g + 1))} className="text-gold text-lg w-6 text-center">+</button>
+            <button type="button" onClick={() => setAdults(a => Math.max(1, a - 1))} className="text-gold text-lg w-6 text-center">−</button>
+            <span className="flex-1 text-center text-cream">{adults} Adult{adults > 1 ? 's' : ''}</span>
+            <button type="button" onClick={() => setAdults(a => Math.min(20, a + 1))} className="text-gold text-lg w-6 text-center">+</button>
+          </div>
+        </div>
+        <div>
+          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Children (under 12 yrs)</label>
+          <div className="flex items-center gap-3 luxury-input">
+            <button type="button" onClick={() => setChildren(c => Math.max(0, c - 1))} className="text-gold text-lg w-6 text-center">−</button>
+            <span className="flex-1 text-center text-cream">{children} Child{children !== 1 ? 'ren' : ''}</span>
+            <button type="button" onClick={() => setChildren(c => Math.min(10, c + 1))} className="text-gold text-lg w-6 text-center">+</button>
           </div>
         </div>
       </div>
@@ -485,9 +425,6 @@ export function ReservationTab() {
 }
 
 export default function Booking() {
-  const [activeTab, setActiveTab] = useState<'booking' | 'reservation'>('booking');
-  const [resetKey, setResetKey] = useState(0);
-
   return (
     <section id="booking" className="section-padding bg-dark-100 relative overflow-hidden">
       {/* Background */}
@@ -511,7 +448,7 @@ export default function Booking() {
               viewport={{ once: true }}
               className="section-label justify-center mb-4"
             >
-              Reservations & Bookings
+              Book Your Stay
             </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 30 }}
@@ -526,41 +463,14 @@ export default function Booking() {
             <div className="gold-divider" />
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-0 mb-8 border border-black/10">
-            {[
-              { id: 'booking' as const, label: 'Book Your Stay' },
-              { id: 'reservation' as const, label: 'Reserve a Table' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  if (activeTab === tab.id) {
-                    setResetKey(prev => prev + 1);
-                  } else {
-                    setActiveTab(tab.id);
-                  }
-                }}
-                className={`flex-1 py-4 text-xs font-semibold tracking-wider uppercase transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? 'bg-gold text-dark font-bold'
-                    : 'text-cream/50 hover:text-cream/80 hover:bg-black/5'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
           {/* Form */}
           <motion.div
-            key={`${activeTab}-${resetKey}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             className="glass p-8 md:p-10"
           >
-            {activeTab === 'booking' ? <BookingTab /> : <ReservationTab />}
+            <BookingTab />
           </motion.div>
 
         </div>
