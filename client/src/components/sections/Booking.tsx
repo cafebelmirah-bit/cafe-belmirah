@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import type { BookingForm, ReservationForm } from '../../types';
-import { fetchRooms, checkAvailability, api, API_URL } from '../../lib/api';
+import { fetchRooms, checkAvailability, submitReservation, api, API_URL } from '../../lib/api';
 import toast from 'react-hot-toast';
+import { useSiteContent } from '../../context/SiteContentContext';
+import { FaWhatsapp } from 'react-icons/fa';
 
 // Utility to load Razorpay script dynamically
 const loadRazorpay = () => {
@@ -20,7 +22,7 @@ const loadRazorpay = () => {
 const timeSlots = ['12:00 PM', '1:00 PM', '2:00 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM'];
 const occasions = ['None', 'Anniversary', 'Birthday', 'Honeymoon', 'Business Dinner', 'Proposal', 'Other'];
 
-function SuccessMessage({ type, referenceId }: { type: 'booking' | 'reservation', referenceId: string }) {
+function SuccessMessage({ type, referenceId, whatsappUrl }: { type: 'booking' | 'reservation', referenceId: string, whatsappUrl?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -29,28 +31,62 @@ function SuccessMessage({ type, referenceId }: { type: 'booking' | 'reservation'
     >
       <div className="text-6xl mb-4">{type === 'booking' ? '🏕️' : '🍽️'}</div>
       <h3 className="font-display text-3xl text-cream mb-2">
-        {type === 'booking' ? 'Booking Confirmed!' : 'Table Reserved!'}
+        {type === 'booking' ? 'Booking Confirmed!' : 'Table Reservation Sent!'}
       </h3>
       <p className="text-cream/50 mb-6">
-        Your {type === 'booking' ? 'stay' : 'table reservation'} has been instantly confirmed! We have sent the details to your email.
+        {type === 'booking' 
+          ? 'Your stay has been instantly confirmed! We have sent the details to your email.'
+          : 'Your table reservation request has been received and forwarded to our team via WhatsApp!'}
       </p>
       <div className="bg-black/5 p-4 rounded-lg inline-block text-left mb-6">
         <span className="block text-xs uppercase tracking-wider text-gold mb-1">Your Reference ID</span>
         <span className="font-mono text-xl text-cream tracking-widest">{referenceId}</span>
       </div>
-      <p className="text-sm text-cream/40">You can use this Reference ID to track your booking status.</p>
+      <p className="text-sm text-cream/40 mb-6">
+        {type === 'booking'
+          ? 'You can use this Reference ID to track your booking status.'
+          : 'Our team will confirm your table shortly. Keep this Reference ID for your records.'}
+      </p>
       <div className="glass-gold inline-block px-6 py-3 mb-6">
-        <p className="text-gold text-sm">A confirmation email has been sent to your inbox.</p>
+        <p className="text-gold text-sm">
+          {type === 'booking' 
+            ? 'A confirmation email has been sent to your inbox.' 
+            : 'Details sent to Café Belmirah on WhatsApp.'}
+        </p>
       </div>
-      <div>
-        <a 
-          href={`${API_URL}/invoice/${referenceId}/download.pdf`} 
-          target="_blank" 
-          rel="noreferrer"
-          className="btn-gold inline-flex items-center gap-2"
-        >
-          Download PDF Invoice
-        </a>
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        {type === 'booking' ? (
+          <a 
+            href={`${API_URL}/invoice/${referenceId}/download.pdf`} 
+            target="_blank" 
+            rel="noreferrer"
+            className="btn-gold inline-flex items-center gap-2"
+          >
+            Download PDF Invoice
+          </a>
+        ) : (
+          <>
+            {whatsappUrl && (
+              <a 
+                href={whatsappUrl} 
+                target="_blank" 
+                rel="noreferrer"
+                className="bg-[#25D366] hover:bg-[#20ba59] text-white font-body font-semibold px-6 py-3 rounded text-sm transition-all inline-flex items-center gap-2 shadow-lg hover:shadow-[#25D366]/20"
+              >
+                <FaWhatsapp size={18} />
+                Open WhatsApp Chat
+              </a>
+            )}
+            <a 
+              href={`${API_URL}/invoice/${referenceId}/download.pdf`} 
+              target="_blank" 
+              rel="noreferrer"
+              className="btn-outline-gold inline-flex items-center gap-2 text-sm"
+            >
+              Download Receipt
+            </a>
+          </>
+        )}
       </div>
     </motion.div>
   );
@@ -324,117 +360,58 @@ function BookingTab() {
   );
 }
 
-// Table reservation component (to be re-enabled later)
+// Table reservation component (WhatsApp direct booking)
 export function ReservationTab() {
   const [submittedId, setSubmittedId] = useState<string | null>(null);
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
   const [guests, setGuests] = useState(2);
-  const [step, setStep] = useState<1 | 2>(1);
-  const [reservationData, setReservationData] = useState<ReservationForm | null>(null);
+  const { content } = useSiteContent();
 
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<ReservationForm>();
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ReservationForm>();
 
-  const onStep1Submit = (data: ReservationForm) => {
-    setReservationData(data);
-    setStep(2);
-  };
-
-  const onPaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reservationData) return;
-    
+  const onReservationSubmit = async (data: ReservationForm) => {
     try {
-      const isLoaded = await loadRazorpay();
-      if (!isLoaded) {
-        toast.error('Razorpay SDK failed to load. Are you online?');
-        return;
+      // 1. Submit reservation to backend so it's recorded and visible in Admin Dashboard
+      const res = await submitReservation({ ...data, guests });
+      const refId = res.data?.referenceId || `BEL-${Date.now().toString(36).toUpperCase()}`;
+      setSubmittedId(refId);
+
+      // 2. Format owner's phone number for WhatsApp
+      let rawPhone = (content.contact_phone || '9511896490').replace(/[^0-9]/g, '');
+      if (rawPhone.length === 10) {
+        rawPhone = '91' + rawPhone;
       }
 
-      const reservationFee = 500 * guests;
-      
-      const { data: { order } } = await api.post('/payment/create-order', {
-        amount: reservationFee,
-        receipt: `receipt_res_${Date.now()}`
-      });
+      // 3. Format WhatsApp reservation message
+      const message = 
+`🍽️ *New Table Reservation Request — Café Belmirah*
 
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'YOUR_RAZORPAY_KEY_ID',
-        amount: order.amount,
-        currency: order.currency,
-        name: 'Café Belmirah',
-        description: 'Table Reservation',
-        order_id: order.id,
-        handler: async function (response: any) {
-          try {
-            const verifyRes = await api.post('/payment/verify', {
-              ...response,
-              bookingData: { ...reservationData, guests },
-              type: 'reservation'
-            });
-            if (verifyRes.data.success) {
-              setSubmittedId(verifyRes.data.referenceId);
-              toast.success('Table reserved successfully! Check your email.');
-            }
-          } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Payment verification failed.');
-          }
-        },
-        prefill: {
-          name: reservationData.name,
-          email: reservationData.email,
-          contact: reservationData.phone,
-        },
-        theme: {
-          color: '#C9A84C'
-        }
-      };
+🔖 *Reference ID:* ${refId}
+👤 *Name:* ${data.name}
+📱 *Phone:* ${data.phone}
+✉️ *Email:* ${data.email}
+📅 *Date:* ${data.date}
+⏰ *Time:* ${data.time}
+👥 *Guests:* ${guests}
+🎉 *Occasion:* ${data.occasion || 'None'}
+📝 *Special Requests:* ${data.specialRequests || 'None'}`;
 
-      const rzp1 = new (window as any).Razorpay(options);
-      rzp1.on('payment.failed', function (response: any) {
-        toast.error('Payment failed: ' + response.error.description);
-      });
-      rzp1.open();
+      const waLink = `https://wa.me/${rawPhone}?text=${encodeURIComponent(message)}`;
+      setWhatsappUrl(waLink);
 
+      toast.success('Reservation submitted! Forwarding to WhatsApp...');
+      window.open(waLink, '_blank');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to initiate payment.');
+      toast.error(error.response?.data?.error || 'Failed to submit reservation. Please try again.');
     }
   };
 
-  if (submittedId) return <SuccessMessage type="reservation" referenceId={submittedId} />;
-
-  if (step === 2) {
-    const reservationFee = 500 * guests; // Fake reservation fee calculation
-    
-    return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-        <button onClick={() => setStep(1)} className="text-gold text-sm uppercase tracking-wider mb-4 hover:text-cream transition-colors">← Back to Details</button>
-        <h3 className="font-display text-2xl text-cream mb-6">Complete Reservation Payment</h3>
-        
-        <div className="bg-black/20 p-6 rounded-lg border border-black/10 mb-6">
-          <h4 className="text-gold font-body uppercase tracking-wider text-xs mb-4">Reservation Summary</h4>
-          <div className="space-y-2 text-sm text-cream/80">
-            <div className="flex justify-between"><span>Date & Time:</span> <span>{watch('date')} at {watch('time')}</span></div>
-            <div className="flex justify-between"><span>Guests:</span> <span>{guests}</span></div>
-            <div className="flex justify-between font-bold pt-2 border-t border-black/10 mt-2"><span>Reservation Fee (₹500/guest):</span> <span>₹{reservationFee.toLocaleString()}</span></div>
-          </div>
-          <p className="text-xs text-cream/50 mt-4 italic">This amount will be deducted from your final bill.</p>
-        </div>
-
-        <form onSubmit={onPaymentSubmit} className="space-y-6">
-          <div className="bg-black/20 p-6 rounded-lg border border-black/10">
-            <h4 className="text-gold font-body uppercase tracking-wider text-xs mb-4">Secure Payment Info</h4>
-            <p className="text-sm text-cream/70 mb-4">You will be redirected to Razorpay's secure checkout window to complete your transaction via UPI, Cards, or NetBanking.</p>
-          </div>
-
-          <button type="submit" disabled={isSubmitting} className="btn-gold w-full py-4">
-            {isSubmitting ? 'Processing...' : `Pay ₹${reservationFee.toLocaleString()} & Confirm`}
-          </button>
-        </form>
-      </motion.div>
-    );
+  if (submittedId) {
+    return <SuccessMessage type="reservation" referenceId={submittedId} whatsappUrl={whatsappUrl || undefined} />;
   }
 
   return (
-    <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onReservationSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
           <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Full Name</label>
@@ -485,13 +462,23 @@ export function ReservationTab() {
         <textarea {...register('specialRequests')} className="luxury-input resize-none" rows={3} placeholder="Dietary requirements, decoration, seating preference..." />
       </div>
 
-      <button type="submit" disabled={isSubmitting} className="btn-gold w-full justify-center py-4">
+      <div className="bg-black/20 p-4 rounded-lg border border-black/10 flex items-center gap-3 text-sm text-cream/70">
+        <FaWhatsapp size={24} className="text-[#25D366] flex-shrink-0" />
+        <span>Your table reservation will be sent directly to our team via WhatsApp for instant confirmation. No upfront payment required.</span>
+      </div>
+
+      <button type="submit" disabled={isSubmitting} className="btn-gold w-full justify-center py-4 inline-flex items-center gap-2">
         {isSubmitting ? (
           <span className="flex items-center gap-2">
             <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}>◌</motion.span>
-            Processing...
+            Submitting...
           </span>
-        ) : 'Reserve My Table'}
+        ) : (
+          <span className="inline-flex items-center gap-2">
+            <FaWhatsapp size={18} />
+            Reserve Table via WhatsApp
+          </span>
+        )}
       </button>
     </form>
   );
