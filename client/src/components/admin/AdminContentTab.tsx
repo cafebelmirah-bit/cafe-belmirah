@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { fetchGallery, fetchExperiences, fetchHeroMedia, fetchStory, updateStory, createTestimonial, updateTestimonial, deleteTestimonial, createGalleryImage, deleteGalleryImage, createExperience, deleteExperience, createHeroMedia, deleteHeroMedia, uploadPhoto, fetchAdminTestimonials, fetchSiteContent, updateSiteContent } from '../../lib/api';
@@ -17,6 +17,8 @@ export default function AdminContentTab() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [newTestimonial, setNewTestimonial] = useState({ name: '', role: '', content: '', rating: '5' });
   const [newGallery, setNewGallery] = useState({ title: '', category: '' });
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const [newExperience, setNewExperience] = useState({ title: '', description: '', icon: '🌟' });
   const [experienceFiles, setExperienceFiles] = useState<File[]>([]);
   const [newHeroMedia, setNewHeroMedia] = useState({ type: 'image', url: '' });
@@ -101,6 +103,7 @@ export default function AdminContentTab() {
   const handleGallerySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!imageFile) return toast.error('Please select an image');
+    setIsUploadingGallery(true);
     try {
       const uploadRes = await uploadPhoto(imageFile);
       const res = await createGalleryImage({ ...newGallery, url: uploadRes.url });
@@ -108,9 +111,12 @@ export default function AdminContentTab() {
       toast.success('Image added to gallery');
       setNewGallery({ title: '', category: '' });
       setImageFile(null);
+      if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
     } catch (e: any) {
       toast.error('Failed to add image: ' + (e.response?.data?.message || e.message));
       console.error(e);
+    } finally {
+      setIsUploadingGallery(false);
     }
   };
 
@@ -264,9 +270,16 @@ export default function AdminContentTab() {
             {activeContentTab === 'gallery' && (
               <form onSubmit={handleGallerySubmit} className="space-y-4">
                 <input placeholder="Title (optional)" value={newGallery.title} onChange={e => setNewGallery({ ...newGallery, title: e.target.value })} className="luxury-input w-full" />
-                <input required placeholder="Category (e.g. Glamping, Nature, Stay...)" value={newGallery.category} onChange={e => setNewGallery({ ...newGallery, category: e.target.value })} className="luxury-input w-full" />
-                <input type="file" onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-cream/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/10 file:text-gold hover:file:bg-gold/20" />
-                <button type="submit" className="btn-gold w-full py-3">Upload Image</button>
+                <input required placeholder="Category (e.g. Glamping, Nature, Stay, Cafeteria...)" value={newGallery.category} onChange={e => setNewGallery({ ...newGallery, category: e.target.value })} className="luxury-input w-full" />
+                <div>
+                  <input ref={galleryFileInputRef} type="file" accept="image/*" onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-cream/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/10 file:text-gold hover:file:bg-gold/20" />
+                  {imageFile && (
+                    <p className="text-xs text-cream/50 mt-1">Selected: {imageFile.name} ({(imageFile.size / (1024 * 1024)).toFixed(2)} MB)</p>
+                  )}
+                </div>
+                <button type="submit" disabled={isUploadingGallery} className="btn-gold w-full py-3 justify-center">
+                  {isUploadingGallery ? 'Uploading Image...' : 'Upload Image'}
+                </button>
               </form>
             )}
 
@@ -530,16 +543,27 @@ export default function AdminContentTab() {
             ))}
 
             {activeContentTab === 'gallery' && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {gallery.map(g => (
-                  <div key={g.id} className="relative group aspect-square rounded-lg overflow-hidden border border-black/10">
-                    <img src={g.url} alt={g.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button onClick={() => handleGalleryDelete(g.id)} className="text-red-400 text-xs uppercase font-bold tracking-wider">Delete</button>
+              gallery.length === 0 ? (
+                <div className="text-cream/40 text-sm py-12 text-center border border-dashed border-white/10 rounded-xl">
+                  No gallery images uploaded yet. Upload your first image using the form on the left.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {gallery.map(g => (
+                    <div key={g.id} className="relative group aspect-square rounded-lg overflow-hidden border border-black/10 bg-dark-100">
+                      <img src={g.url} alt={g.title || 'Gallery image'} className="w-full h-full object-cover" />
+                      {g.category && (
+                        <div className="absolute top-2 left-2 bg-black/75 backdrop-blur-sm text-[10px] px-2 py-0.5 rounded text-gold font-semibold uppercase tracking-wider">
+                          {g.category}
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button onClick={() => handleGalleryDelete(g.id)} className="text-red-400 text-xs uppercase font-bold tracking-wider">Delete</button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )
             )}
 
             {activeContentTab === 'experiences' && experiences.map(exp => (

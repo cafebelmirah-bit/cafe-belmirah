@@ -19,6 +19,7 @@ const socialLinks = [
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
   const { register, handleSubmit, formState: { isSubmitting } } = useForm();
   const { content } = useSiteContent();
 
@@ -50,12 +51,31 @@ export default function Contact() {
   ];
 
   const onSubmit = async (data: any) => {
+    let rawPhone = (content.contact_phone || '9511896490').replace(/[^0-9]/g, '');
+    if (rawPhone.length === 10) rawPhone = '91' + rawPhone;
+
+    const message = 
+`💬 *New Inquiry / Message — Café Belmirah*
+
+👤 *Name:* ${data.name}
+✉️ *Email:* ${data.email}
+📌 *Subject:* ${data.subject || 'General Inquiry'}
+
+📝 *Message:*
+${data.message}`;
+
+    const waLink = `https://wa.me/${rawPhone}?text=${encodeURIComponent(message)}`;
+    setWhatsappUrl(waLink);
+
     try {
       await submitInquiry(data);
-      setSubmitted(true);
-    } catch (error) {
-      toast.error('Failed to send message. Please try again.');
+    } catch {
+      // Non-fatal, still open WhatsApp
     }
+
+    setSubmitted(true);
+    toast.success('Forwarding your message to WhatsApp...');
+    window.open(waLink, '_blank');
   };
 
   return (
@@ -158,9 +178,20 @@ export default function Contact() {
                 className="h-full flex items-center justify-center text-center glass p-12"
               >
                 <div>
-                  <div className="text-5xl mb-4">✉️</div>
-                  <h3 className="font-display text-3xl text-cream mb-2">Message Sent!</h3>
-                  <p className="text-cream/50">We'll get back to you within 24 hours.</p>
+                  <div className="text-5xl mb-4">💬</div>
+                  <h3 className="font-display text-3xl text-cream mb-2">Message Forwarded!</h3>
+                  <p className="text-cream/50 mb-6">Your message has been forwarded to our team on WhatsApp.</p>
+                  {whatsappUrl && (
+                    <a 
+                      href={whatsappUrl} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="bg-[#25D366] hover:bg-[#20ba59] text-white font-body font-semibold px-6 py-3 rounded text-sm transition-all inline-flex items-center gap-2 shadow-lg hover:shadow-[#25D366]/20"
+                    >
+                      <FaWhatsapp size={18} />
+                      Open WhatsApp Chat
+                    </a>
+                  )}
                 </div>
               </motion.div>
             ) : (
@@ -194,8 +225,14 @@ export default function Contact() {
                   />
                 </div>
 
-                <button type="submit" disabled={isSubmitting} className="btn-gold w-full justify-center py-4">
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                <div className="bg-black/20 p-3 rounded-lg border border-black/10 flex items-center gap-3 text-xs text-cream/70">
+                  <FaWhatsapp size={20} className="text-[#25D366] flex-shrink-0" />
+                  <span>Your message will be sent directly to our team via WhatsApp for an instant response.</span>
+                </div>
+
+                <button type="submit" disabled={isSubmitting} className="btn-gold w-full justify-center py-4 inline-flex items-center gap-2">
+                  <FaWhatsapp size={18} />
+                  {isSubmitting ? 'Forwarding...' : 'Send Message via WhatsApp'}
                 </button>
               </form>
             )}
