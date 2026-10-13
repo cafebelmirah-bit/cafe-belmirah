@@ -324,7 +324,8 @@ function BookingTab() {
   );
 }
 
-function ReservationTab() {
+// Table reservation component (to be re-enabled later)
+export function ReservationTab() {
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [guests, setGuests] = useState(2);
   const [step, setStep] = useState<1 | 2>(1);
@@ -497,9 +498,6 @@ function ReservationTab() {
 }
 
 export default function Booking() {
-  const [activeTab, setActiveTab] = useState<'booking' | 'reservation'>('booking');
-  const [resetKey, setResetKey] = useState(0);
-
   return (
     <section id="booking" className="section-padding bg-dark-100 relative overflow-hidden">
       {/* Background */}
@@ -523,7 +521,7 @@ export default function Booking() {
               viewport={{ once: true }}
               className="section-label justify-center mb-4"
             >
-              Reservations
+              Book Your Stay
             </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 30 }}
@@ -538,41 +536,14 @@ export default function Booking() {
             <div className="gold-divider" />
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-0 mb-8 border border-black/10">
-            {[
-              { id: 'booking' as const, label: 'Book Your Stay' },
-              // { id: 'reservation' as const, label: 'Reserve a Table' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  if (activeTab === tab.id) {
-                    setResetKey(prev => prev + 1);
-                  } else {
-                    setActiveTab(tab.id);
-                  }
-                }}
-                className={`flex-1 py-4 text-xs font-semibold tracking-wider uppercase transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? 'bg-gold text-dark'
-                    : 'text-cream/50 hover:text-cream/80 hover:bg-black/5'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
           {/* Form */}
           <motion.div
-            key={`${activeTab}-${resetKey}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             className="glass p-8 md:p-10"
           >
-            {activeTab === 'booking' ? <BookingTab /> : <ReservationTab />}
+            <BookingTab />
           </motion.div>
 
         </div>
