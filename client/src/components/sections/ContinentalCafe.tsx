@@ -71,7 +71,9 @@ function MenuCard({ item, index }: { item: any; index: number }) {
 
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="font-display text-base text-cream leading-tight">{item.name}</h3>
-          <span className="font-body text-lg text-gold font-light whitespace-nowrap">₹{item.price}</span>
+          {item.price ? (
+            <span className="font-body text-lg text-gold font-light whitespace-nowrap">₹{item.price}</span>
+          ) : null}
         </div>
         <p className="text-cream/40 text-xs leading-relaxed flex-1 line-clamp-2">
           {item.description}

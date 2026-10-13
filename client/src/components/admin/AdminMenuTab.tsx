@@ -37,6 +37,7 @@ export default function AdminMenuTab() {
       
       const payload = { 
         ...newItem, 
+        price: newItem.price !== '' ? Number(newItem.price) : null,
         image: imageUrl || undefined 
       };
 
@@ -105,8 +106,16 @@ export default function AdminMenuTab() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Price (₹)</label>
-                <input required type="number" value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} className="luxury-input w-full" />
+                <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">
+                  Price (₹) <span className="normal-case text-cream/40">(Optional)</span>
+                </label>
+                <input 
+                  type="number" 
+                  value={newItem.price} 
+                  onChange={e => setNewItem({...newItem, price: e.target.value})} 
+                  className="luxury-input w-full" 
+                  placeholder="Optional" 
+                />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Category</label>
@@ -175,7 +184,9 @@ export default function AdminMenuTab() {
                     {item.isBestseller && <span className="text-xs">⭐</span>}
                   </div>
                 </div>
-                <p className="text-gold text-sm font-semibold mb-2">₹{item.price}</p>
+                <p className="text-gold text-sm font-semibold mb-2">
+                  {item.price ? `₹${item.price}` : <span className="text-cream/40 text-xs font-normal">Price not set</span>}
+                </p>
                 <div className="flex justify-between items-center mt-auto">
                   <span className="text-xs uppercase tracking-wider text-cream/40 bg-black/5 px-2 py-1 rounded">{item.category}</span>
                   <div className="flex gap-4">

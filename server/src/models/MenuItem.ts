@@ -5,7 +5,7 @@ export class MenuItem extends Model {
   declare id: number;
   declare name: string;
   declare description: string;
-  declare price: number;
+  declare price: number | null;
   declare category: string;
   declare isVeg: boolean;
   declare isBestseller: boolean;
@@ -29,7 +29,8 @@ MenuItem.init(
     },
     price: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: null,
     },
     category: {
       type: DataTypes.STRING,
