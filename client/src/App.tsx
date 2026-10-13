@@ -21,7 +21,7 @@ gsap.registerPlugin(ScrollTrigger);
 import ComingSoon from './pages/ComingSoon';
 import { useLocation } from 'react-router-dom';
 
-const IS_COMING_SOON = true;
+const IS_COMING_SOON = false;
 
 function AppRoutes() {
   const location = useLocation();
