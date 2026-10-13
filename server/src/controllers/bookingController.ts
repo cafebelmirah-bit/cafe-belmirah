@@ -190,6 +190,11 @@ export const trackBooking = async (req: Request, res: Response) => {
 };
 
 export const getInvoice = async (req: Request, res: Response) => {
+  return res.status(503).json({
+    success: false,
+    message: 'Invoice generation service is temporarily disabled.'
+  });
+  
   try {
     const { referenceId } = req.params;
     

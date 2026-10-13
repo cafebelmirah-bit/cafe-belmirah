@@ -36,8 +36,8 @@ export const sendBookingConfirmation = async (email: string, name: string, refer
             <p style="margin: 0;"><strong>Reference ID:</strong> ${referenceId}</p>
             <p style="margin: 10px 0 0 0;">${details}</p>
           </div>
-          <p>You can view and download your full invoice using this link:</p>
-          <p><a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/verify/${referenceId}" style="color: #C9A84C;">View Invoice</a></p>
+          <p>You can track your booking status anytime using your Reference ID:</p>
+          <p><a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/track" style="color: #C9A84C;">Track Booking Status</a></p>
           <p>We look forward to hosting you!</p>
           <p>Warm regards,<br>The Café Belmirah Team</p>
         </div>

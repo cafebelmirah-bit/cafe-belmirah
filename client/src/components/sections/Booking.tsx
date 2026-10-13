@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import type { BookingForm, ReservationForm } from '../../types';
-import { fetchRooms, checkAvailability, submitBooking, submitReservation, API_URL } from '../../lib/api';
+import { fetchRooms, checkAvailability, submitBooking, submitReservation } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -50,14 +50,6 @@ function SuccessMessage({ type, referenceId, whatsappUrl }: { type: 'booking' | 
             Open WhatsApp Chat
           </a>
         )}
-        <a 
-          href={`${API_URL}/invoice/${referenceId}/download.pdf`} 
-          target="_blank" 
-          rel="noreferrer"
-          className="btn-outline-gold inline-flex items-center gap-2 text-sm"
-        >
-          Download PDF Invoice
-        </a>
       </div>
     </motion.div>
   );

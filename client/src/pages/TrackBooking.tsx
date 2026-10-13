@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { trackBooking, cancelBookingCustomer, API_URL } from '../lib/api';
+import { trackBooking, cancelBookingCustomer } from '../lib/api';
 
 export default function TrackBooking() {
   const [result, setResult] = useState<{ bookings: any[], reservations: any[] } | null>(null);
@@ -103,24 +103,16 @@ export default function TrackBooking() {
                         <div><span className="block text-cream/40 text-xs uppercase mb-1">Check Out</span><span className="text-cream/90">{new Date(booking.checkOut).toLocaleDateString()}</span></div>
                       </div>
 
-                      <div className="flex gap-4 pt-4 border-t border-white/5">
-                        <a 
-                          href={`${API_URL}/invoice/${booking.referenceId}/download.pdf`} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="flex-1 text-center py-2 bg-gold/10 hover:bg-gold/20 text-gold text-sm rounded transition-colors"
-                        >
-                          Download Invoice
-                        </a>
-                        {booking.status !== 'cancelled' && (
+                      {booking.status !== 'cancelled' && (
+                        <div className="flex gap-4 pt-4 border-t border-white/5">
                           <button 
                             onClick={() => handleCancelBooking(booking.email, booking.referenceId)}
                             className="flex-1 text-center py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm rounded transition-colors"
                           >
                             Cancel Booking
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -150,16 +142,7 @@ export default function TrackBooking() {
                         <div><span className="block text-cream/40 text-xs uppercase mb-1">Occasion</span><span className="text-cream/90">{reservation.occasion || 'None'}</span></div>
                       </div>
 
-                      <div className="flex gap-4 pt-4 border-t border-white/5">
-                        <a 
-                          href={`${API_URL}/invoice/${reservation.referenceId}/download.pdf`} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="flex-1 text-center py-2 bg-gold/10 hover:bg-gold/20 text-gold text-sm rounded transition-colors"
-                        >
-                          Download Invoice
-                        </a>
-                      </div>
+
                     </div>
                   ))}
                 </div>
