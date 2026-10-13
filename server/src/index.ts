@@ -54,6 +54,11 @@ const startServer = async () => {
     await Booking.sync();
     await Reservation.sync();
     await MenuItem.sync();
+    try {
+      await sequelize.query('ALTER TABLE menu_items MODIFY COLUMN price FLOAT NULL DEFAULT 0');
+    } catch {
+      // Column already updated or non-fatal
+    }
     await Room.sync();
     await Testimonial.sync();
     await GalleryImage.sync();

@@ -37,7 +37,7 @@ export default function AdminMenuTab() {
       
       const payload = { 
         ...newItem, 
-        price: newItem.price !== '' ? Number(newItem.price) : null,
+        price: newItem.price !== '' ? Number(newItem.price) : 0,
         image: imageUrl || undefined 
       };
 
@@ -56,8 +56,9 @@ export default function AdminMenuTab() {
       
       setNewItem({ name: '', description: '', price: '', category: 'Starters', isVeg: false, isBestseller: false });
       setImageFile(null);
-    } catch {
-      toast.error(editingMenuId ? 'Failed to update item' : 'Failed to create item');
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.error || err?.response?.data?.message || (editingMenuId ? 'Failed to update item' : 'Failed to create item');
+      toast.error(errorMsg);
     }
   };
 
@@ -66,7 +67,7 @@ export default function AdminMenuTab() {
     setNewItem({
       name: item.name || '',
       description: item.description || '',
-      price: String(item.price || ''),
+      price: item.price && Number(item.price) > 0 ? String(item.price) : '',
       category: item.category || 'Starters',
       isVeg: item.isVeg || false,
       isBestseller: item.isBestseller || false
@@ -185,7 +186,7 @@ export default function AdminMenuTab() {
                   </div>
                 </div>
                 <p className="text-gold text-sm font-semibold mb-2">
-                  {item.price ? `₹${item.price}` : <span className="text-cream/40 text-xs font-normal">Price not set</span>}
+                  {Number(item.price) > 0 ? `₹${item.price}` : <span className="text-cream/40 text-xs font-normal">Price not set</span>}
                 </p>
                 <div className="flex justify-between items-center mt-auto">
                   <span className="text-xs uppercase tracking-wider text-cream/40 bg-black/5 px-2 py-1 rounded">{item.category}</span>

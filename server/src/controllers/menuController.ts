@@ -14,9 +14,9 @@ export const createMenuItem = async (req: Request, res: Response) => {
   try {
     const data = { ...req.body };
     if (data.price === '' || data.price === null || data.price === undefined) {
-      data.price = null;
+      data.price = 0;
     } else {
-      data.price = Number(data.price);
+      data.price = Number(data.price) || 0;
     }
     const item = await MenuItem.create(data);
     res.json({ success: true, item });
@@ -31,9 +31,9 @@ export const updateMenuItem = async (req: Request, res: Response) => {
     if (!item) return res.status(404).json({ success: false, message: 'Not found' });
     const data = { ...req.body };
     if (data.price === '' || data.price === null || data.price === undefined) {
-      data.price = null;
+      data.price = 0;
     } else {
-      data.price = Number(data.price);
+      data.price = Number(data.price) || 0;
     }
     await item.update(data);
     res.json({ success: true, item });
