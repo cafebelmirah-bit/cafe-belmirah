@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { fetchBookings, updateBookingStatus, deleteBooking } from '../../lib/api';
+import { fetchBookings, fetchReservations, updateBookingStatus, updateReservationStatus, deleteBooking, deleteReservation } from '../../lib/api';
 
 export default function AdminBookingsTab() {
   const [bookings, setBookings] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,8 +14,9 @@ export default function AdminBookingsTab() {
 
   const loadData = async () => {
     try {
-      const b = await fetchBookings();
+      const [b, r] = await Promise.all([fetchBookings(), fetchReservations()]);
       setBookings(b);
+      setReservations(r);
     } catch (error) {
       toast.error('Failed to load bookings data.');
     } finally {
@@ -43,7 +45,6 @@ export default function AdminBookingsTab() {
     }
   };
 
-  /* Reserved for table reservations implementation
   const handleReservationStatus = async (id: number, status: string) => {
     try {
       await updateReservationStatus(id, status);
@@ -64,15 +65,14 @@ export default function AdminBookingsTab() {
       toast.error('Delete failed');
     }
   };
-  */
 
   if (loading) return <div className="text-cream/50 py-12 text-center">Loading bookings...</div>;
 
   return (
-    <div className="max-w-4xl">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
       {/* Room Bookings */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h2 className="font-display text-2xl text-gold mb-6">Glamping Room Bookings</h2>
+      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+        <h2 className="font-display text-2xl text-gold mb-6">Room Bookings</h2>
         <div className="space-y-4">
           {bookings.length === 0 ? <p className="text-cream/40">No bookings yet.</p> : null}
           {bookings.map((b: any) => (
@@ -88,7 +88,7 @@ export default function AdminBookingsTab() {
                   {b.status}
                 </span>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-cream/80 mb-4 bg-black/5 p-3 rounded">
+              <div className="grid grid-cols-2 gap-4 text-sm text-cream/80 mb-4 bg-black/5 p-3 rounded">
                 <div><span className="text-gold/80 block text-xs uppercase mb-1">Room</span> {b.roomType}</div>
                 <div><span className="text-gold/80 block text-xs uppercase mb-1">Guests</span> {b.guests}</div>
                 <div><span className="text-gold/80 block text-xs uppercase mb-1">In</span> {new Date(b.checkIn).toLocaleDateString()}</div>
@@ -105,8 +105,7 @@ export default function AdminBookingsTab() {
         </div>
       </motion.div>
 
-      {/* Table Reservations (to be implemented later) */}
-      {/*
+      {/* Table Reservations */}
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
         <h2 className="font-display text-2xl text-gold mb-6">Table Reservations</h2>
         <div className="space-y-4">
@@ -140,7 +139,6 @@ export default function AdminBookingsTab() {
           ))}
         </div>
       </motion.div>
-      */}
     </div>
   );
 }

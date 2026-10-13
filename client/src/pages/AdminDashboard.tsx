@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'bookings' | 'calendar' | 'inquiries' | 'menu' | 'rooms' | 'content' | 'settings'>('bookings');
 
   const TABS = [
-    { id: 'bookings', label: 'Bookings' },
+    { id: 'bookings', label: 'Bookings & Reservations' },
     { id: 'calendar', label: 'Calendar' },
     { id: 'inquiries', label: 'Inquiries' },
     { id: 'menu', label: 'Menu Items' },
