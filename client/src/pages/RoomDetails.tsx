@@ -7,6 +7,7 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import { fetchRoomById } from '../lib/api';
+import JsonLd from '../components/seo/JsonLd';
 
 const amenityIcons: Record<string, string> = {
   'King Size Bed': '🛏️',
@@ -44,6 +45,7 @@ export default function RoomDetails() {
         .then((res) => {
           if (res.success) {
             setRoom(res.item);
+            document.title = `${res.item.name} — Luxury Glamping | Café Belmirah, Pawna Lake`;
           }
         })
         .catch(console.error)
@@ -76,8 +78,88 @@ export default function RoomDetails() {
     }, 100);
   };
 
+  const roomSchemaGraph = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': ['HotelRoom', 'Accommodation'],
+        '@id': `https://www.belmirah.in/stay/${room._id || id}`,
+        name: `${room.name} — Café Belmirah Luxury Glamping`,
+        description: room.description,
+        image: room.images && room.images.length > 0 ? room.images : (room.image ? [room.image] : []),
+        occupancy: {
+          '@type': 'QuantitativeValue',
+          maxValue: room.capacity || 2,
+          unitText: 'person',
+        },
+        bed: room.bed || (room.amenities?.find((a: string) => a.toLowerCase().includes('bed')) || 'King Size Bed'),
+        floorSize: room.size ? {
+          '@type': 'QuantitativeValue',
+          value: room.size,
+        } : undefined,
+        amenityFeature: (room.amenities || []).map((amenity: string) => ({
+          '@type': 'LocationFeatureSpecification',
+          name: amenity,
+          value: true,
+        })),
+        offers: {
+          '@type': 'Offer',
+          price: room.price,
+          priceCurrency: 'INR',
+          availability: 'https://schema.org/InStock',
+          url: `https://www.belmirah.in/stay/${room._id || id}`,
+          priceSpecification: {
+            '@type': 'UnitPriceSpecification',
+            price: room.price,
+            priceCurrency: 'INR',
+            unitText: 'per person',
+          },
+        },
+        containedInPlace: {
+          '@type': ['Resort', 'Campground', 'Restaurant'],
+          name: 'Café Belmirah',
+          url: 'https://www.belmirah.in/',
+          telephone: '+919511896490',
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'At Ambegaon, Pawna Lake',
+            addressLocality: 'Lonavala',
+            addressRegion: 'Maharashtra',
+            postalCode: '410405',
+            addressCountry: 'IN',
+          },
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `https://www.belmirah.in/stay/${room._id || id}#breadcrumb`,
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Home',
+            item: 'https://www.belmirah.in/',
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Luxury Stays',
+            item: 'https://www.belmirah.in/#stay',
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: room.name,
+            item: `https://www.belmirah.in/stay/${room._id || id}`,
+          },
+        ],
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-dark flex flex-col pb-20">
+      <JsonLd id={`room-${id}`} schema={roomSchemaGraph} />
       <main className="flex-1">
         
         {/* Full-Width Media Section */}
