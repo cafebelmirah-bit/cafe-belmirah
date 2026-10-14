@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { SiteContent } from '../models/SiteContent';
+import { Settings } from '../models/Settings';
 
 export const getAllSiteContent = async (req: Request, res: Response) => {
   try {
@@ -10,6 +11,15 @@ export const getAllSiteContent = async (req: Request, res: Response) => {
     contents.forEach(item => {
       contentMap[item.key] = item.value;
     });
+
+    if (!contentMap.contact_phone || contentMap.contact_phone.includes('123-4567') || contentMap.contact_phone.includes('98765 43210')) {
+      const settings = await Settings.findOne();
+      if (settings?.propertyPhone && !settings.propertyPhone.includes('98765 43210')) {
+        contentMap.contact_phone = settings.propertyPhone;
+      } else {
+        contentMap.contact_phone = '+91 95118 96490';
+      }
+    }
 
     res.json({ success: true, data: contentMap });
   } catch (error: any) {

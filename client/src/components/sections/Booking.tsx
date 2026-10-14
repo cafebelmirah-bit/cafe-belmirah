@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import type { BookingForm, ReservationForm } from '../../types';
-import { fetchRooms, checkAvailability, submitBooking, submitReservation } from '../../lib/api';
+import { fetchRooms, checkAvailability, submitBooking, submitReservation, formatWhatsAppNumber } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -136,10 +136,7 @@ function BookingTab() {
       setSubmittedId(refId);
 
       // 3. Format owner phone number
-      let rawPhone = (content.contact_phone || '9511896490').replace(/[^0-9]/g, '');
-      if (rawPhone.length === 10) {
-        rawPhone = '91' + rawPhone;
-      }
+      const rawPhone = formatWhatsAppNumber(content.contact_phone);
 
       const start = new Date(data.checkIn);
       const end = new Date(data.checkOut);

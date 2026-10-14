@@ -26,6 +26,15 @@ export const updateSettings = async (req: Request, res: Response) => {
     if (settings) {
       await settings.update(req.body);
     }
+    if (req.body.propertyPhone) {
+      const { SiteContent } = await import('../models/SiteContent');
+      const item = await SiteContent.findOne({ where: { key: 'contact_phone' } });
+      if (item) {
+        await item.update({ value: req.body.propertyPhone });
+      } else {
+        await SiteContent.create({ key: 'contact_phone', value: req.body.propertyPhone });
+      }
+    }
     res.json({ success: true, data: settings });
   } catch (error: any) {
     res.status(400).json({ success: false, error: error.message });

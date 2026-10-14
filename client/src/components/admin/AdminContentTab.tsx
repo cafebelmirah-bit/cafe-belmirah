@@ -451,8 +451,16 @@ export default function AdminContentTab() {
                   <input value={globalText.contact_address || ''} onChange={e => setGlobalText({ ...globalText, contact_address: e.target.value })} className="luxury-input w-full" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-cream/70 font-semibold uppercase tracking-wider">Contact Phone</label>
-                  <input value={globalText.contact_phone || ''} onChange={e => setGlobalText({ ...globalText, contact_phone: e.target.value })} className="luxury-input w-full" />
+                  <label className="text-xs text-cream/70 font-semibold uppercase tracking-wider">
+                    Contact Phone (WhatsApp Bookings & Messages)
+                  </label>
+                  <input 
+                    value={globalText.contact_phone || ''} 
+                    onChange={e => setGlobalText({ ...globalText, contact_phone: e.target.value })} 
+                    className="luxury-input w-full" 
+                    placeholder="e.g. +91 95118 96490"
+                  />
+                  <p className="text-[10px] text-cream/50 mt-1">This number receives all WhatsApp booking requests from guests and contact messages.</p>
                 </div>
 
                 <h4 className="font-display text-xl text-gold mt-8 mb-4">Opening Hours</h4>

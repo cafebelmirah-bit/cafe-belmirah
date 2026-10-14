@@ -258,4 +258,17 @@ export const submitInquiry = async (data: any) => (await api.post('/inquiries', 
 export const updateInquiryStatus = async (id: number, status: string) => (await api.patch(`/inquiries/${id}/status`, { status })).data;
 export const deleteInquiry = async (id: number) => (await api.delete(`/inquiries/${id}`)).data;
 
+// WhatsApp Helper
+export const formatWhatsAppNumber = (phone?: string): string => {
+  if (!phone) return '919511896490';
+  let cleaned = phone.replace(/[^0-9]/g, '');
+  if (cleaned.startsWith('0') && cleaned.length === 11) {
+    cleaned = cleaned.slice(1);
+  }
+  if (cleaned.length === 10) {
+    cleaned = '91' + cleaned;
+  }
+  return cleaned || '919511896490';
+};
+
 export default api;

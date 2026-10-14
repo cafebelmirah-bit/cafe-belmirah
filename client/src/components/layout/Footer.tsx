@@ -2,10 +2,13 @@ import { useLocation } from 'react-router-dom';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { FiInstagram, FiFacebook, FiYoutube } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
+import { formatWhatsAppNumber } from '../../lib/api';
 
 export default function Footer() {
   const location = useLocation();
   const { content } = useSiteContent();
+
+  const rawPhone = formatWhatsAppNumber(content.contact_phone);
 
   const footerLinks = {
     Stay: (content.footer_links_stay || 'Royal Glamping Tent, Forest Cabin, Mountain Villa, Luxury Suite').split(',').map(s => s.trim()),
@@ -15,9 +18,9 @@ export default function Footer() {
   };
 
   const socialLinks = [
-    { name: 'Instagram', href: '#', icon: <FiInstagram size={20} strokeWidth={1.5} /> },
+    { name: 'Instagram', href: 'https://www.instagram.com/cafebelmirah', icon: <FiInstagram size={20} strokeWidth={1.5} /> },
     { name: 'Facebook', href: '#', icon: <FiFacebook size={20} strokeWidth={1.5} /> },
-    { name: 'WhatsApp', href: `https://wa.me/${(content.contact_phone || '+91 98765 43210').replace(/[^0-9]/g, '')}`, icon: <FaWhatsapp size={20} /> },
+    { name: 'WhatsApp', href: `https://wa.me/${rawPhone}`, icon: <FaWhatsapp size={20} /> },
     { name: 'YouTube', href: '#', icon: <FiYoutube size={20} strokeWidth={1.5} /> },
   ];
 
@@ -90,14 +93,14 @@ export default function Footer() {
                 Contact Us
               </h3>
               <ul className="space-y-4">
-                <li className="text-cream/40 text-sm">{content.contact_address || '123 Cloud Point Road, Mountain Peak'}</li>
+                <li className="text-cream/40 text-sm">{content.contact_address || 'At Ambegaon, Pawna Lake, Lonavala, Maharashtra 410405'}</li>
                 <li className="text-cream/40 text-sm">
-                  <a href={`tel:${content.contact_phone}`} className="hover:text-cream/80 transition-colors duration-300">
-                    {content.contact_phone || '+1 (555) 123-4567'}
+                  <a href={`tel:${rawPhone.startsWith('+') ? rawPhone : '+' + rawPhone}`} className="hover:text-cream/80 transition-colors duration-300">
+                    {content.contact_phone || '+91 95118 96490'}
                   </a>
                 </li>
                 <li className="text-cream/40 text-sm">
-                  <a href={`mailto:${content.contact_email}`} className="hover:text-cream/80 transition-colors duration-300">
+                  <a href={`mailto:${content.contact_email || 'reservations@cafebelmirah.com'}`} className="hover:text-cream/80 transition-colors duration-300">
                     {content.contact_email || 'reservations@cafebelmirah.com'}
                   </a>
                 </li>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { submitInquiry } from '../../lib/api';
+import { submitInquiry, formatWhatsAppNumber } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { Phone, Mail, MapPin } from 'lucide-react';
@@ -11,7 +11,7 @@ import { FaTripadvisor, FaWhatsapp } from 'react-icons/fa';
 // contactItems moved inside component to use dynamic content
 
 const socialLinks = [
-  { name: 'Instagram', icon: <FiInstagram size={20} strokeWidth={1.5} />, href: '#' },
+  { name: 'Instagram', icon: <FiInstagram size={20} strokeWidth={1.5} />, href: 'https://www.instagram.com/cafebelmirah' },
   { name: 'Facebook', icon: <FiFacebook size={20} strokeWidth={1.5} />, href: '#' },
   { name: 'YouTube', icon: <FiYoutube size={20} strokeWidth={1.5} />, href: '#' },
   { name: 'TripAdvisor', icon: <FaTripadvisor size={20} />, href: '#' },
@@ -23,36 +23,36 @@ export default function Contact() {
   const { register, handleSubmit, formState: { isSubmitting } } = useForm();
   const { content } = useSiteContent();
 
+  const rawPhone = formatWhatsAppNumber(content.contact_phone);
+
   const contactItems = [
     {
       icon: <Phone size={24} strokeWidth={1.5} />,
       label: 'Phone',
-      value: content.contact_phone || '+91 98765 43210',
-      href: `tel:${(content.contact_phone || '+91 98765 43210').replace(/\s/g, '')}`,
+      value: content.contact_phone || '+91 95118 96490',
+      href: `tel:${rawPhone.startsWith('+') ? rawPhone : '+' + rawPhone}`,
     },
     {
       icon: <FaWhatsapp size={24} />,
       label: 'WhatsApp',
-      value: content.contact_phone || '+91 98765 43210',
-      href: `https://wa.me/${(content.contact_phone || '+91 98765 43210').replace(/[^0-9]/g, '')}`,
+      value: content.contact_phone || '+91 95118 96490',
+      href: `https://wa.me/${rawPhone}`,
     },
     {
       icon: <Mail size={24} strokeWidth={1.5} />,
       label: 'Email',
-      value: content.contact_email || 'hello@cafebelmirah.com',
-      href: `mailto:${content.contact_email || 'hello@cafebelmirah.com'}`,
+      value: content.contact_email || 'reservations@cafebelmirah.com',
+      href: `mailto:${content.contact_email || 'reservations@cafebelmirah.com'}`,
     },
     {
       icon: <MapPin size={24} strokeWidth={1.5} />,
       label: 'Location',
-      value: content.contact_address || 'Mountain Road, Shimla Hills, Himachal Pradesh 171001',
-      href: 'https://maps.google.com',
+      value: content.contact_address || 'At Ambegaon, Pawna Lake, Lonavala, Maharashtra 410405',
+      href: 'https://maps.app.goo.gl/np7MnrX3rP5y3ShE9',
     },
   ];
 
   const onSubmit = async (data: any) => {
-    let rawPhone = (content.contact_phone || '9511896490').replace(/[^0-9]/g, '');
-    if (rawPhone.length === 10) rawPhone = '91' + rawPhone;
 
     const message = 
 `💬 *New Inquiry / Message — Café Belmirah*

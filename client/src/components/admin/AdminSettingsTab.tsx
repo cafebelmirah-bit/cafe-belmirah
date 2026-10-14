@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { fetchSettings, updateSettings, uploadPhoto } from '../../lib/api';
+import { fetchSettings, updateSettings, uploadPhoto, updateSiteContent } from '../../lib/api';
 
 export default function AdminSettingsTab() {
   const [settings, setSettings] = useState<any>({ 
@@ -42,6 +42,13 @@ export default function AdminSettingsTab() {
       
       const res = await updateSettings(finalSettings);
       if (res.success) {
+        if (finalSettings.propertyPhone) {
+          try {
+            await updateSiteContent({ contact_phone: finalSettings.propertyPhone });
+          } catch (e) {
+            console.error('Failed to sync contact_phone to site content:', e);
+          }
+        }
         toast.success('Settings updated successfully');
         setSettings(res.data);
       }
@@ -115,14 +122,15 @@ export default function AdminSettingsTab() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Phone</label>
+                  <label className="block text-xs uppercase tracking-wider text-cream/50 mb-1">Phone (WhatsApp & Invoices)</label>
                   <input 
                     type="text" 
                     value={settings.propertyPhone} 
                     onChange={e => setSettings({...settings, propertyPhone: e.target.value})}
                     className="luxury-input w-full"
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 95118 96490"
                   />
+                  <p className="text-[10px] text-cream/40 mt-1">Updates both the invoice phone and guest WhatsApp booking recipient.</p>
                 </div>
               </div>
               <div className="pt-2">
