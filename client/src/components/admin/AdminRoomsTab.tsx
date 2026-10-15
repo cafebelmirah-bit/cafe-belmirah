@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { fetchRooms, createRoom, deleteRoom, uploadPhoto } from '../../lib/api';
+import { fetchRooms, createRoom, deleteRoom, uploadPhoto, setCachedData } from '../../lib/api';
 
 export default function AdminRoomsTab() {
   const [rooms, setRooms] = useState<any[]>([]);
@@ -18,6 +18,7 @@ export default function AdminRoomsTab() {
     try {
       const rm = await fetchRooms();
       setRooms(rm);
+      setCachedData('rooms', rm);
     } catch (error) {
       toast.error('Failed to load rooms.');
     } finally {
@@ -64,12 +65,16 @@ export default function AdminRoomsTab() {
         // @ts-ignore
         const { updateRoom } = await import('../../lib/api');
         const res = await updateRoom(editingRoomId, payload);
-        setRooms(rooms.map(r => r.id === editingRoomId ? res.item : r));
+        const updated = rooms.map(r => r.id === editingRoomId ? res.item : r);
+        setRooms(updated);
+        setCachedData('rooms', updated);
         toast.success('Room updated');
         setEditingRoomId(null);
       } else {
         const res = await createRoom(payload as any);
-        setRooms([...rooms, res.item]);
+        const updated = [...rooms, res.item];
+        setRooms(updated);
+        setCachedData('rooms', updated);
         toast.success('Room created');
       }
 
@@ -104,7 +109,9 @@ export default function AdminRoomsTab() {
     if (!window.confirm('Delete this room?')) return;
     try {
       await deleteRoom(id);
-      setRooms(rooms.filter((r: any) => r.id !== id));
+      const updated = rooms.filter((r: any) => r.id !== id);
+      setRooms(updated);
+      setCachedData('rooms', updated);
       toast.success('Room deleted');
     } catch {
       toast.error('Delete failed');
@@ -218,8 +225,9 @@ export default function AdminRoomsTab() {
                   <h4 className="font-display text-xl text-cream truncate">{room.name}</h4>
                   <p className="text-gold text-lg font-semibold whitespace-nowrap ml-4">₹{room.price}/person</p>
                 </div>
-                <div className="flex gap-4 text-xs text-cream/60 mb-2">
-                  <span>Capacity: {room.capacity}</span>
+                <div className="flex flex-wrap gap-4 text-xs text-cream/60 mb-2">
+                  <span>Capacity: <strong className="text-cream">{room.capacity} guests/unit</strong></span>
+                  <span>Units (Inventory): <strong className="text-gold font-semibold">{room.totalUnits || 1} {Number(room.totalUnits) > 1 ? 'rooms' : 'room'}</strong></span>
                   <span>Size: {room.size}</span>
                 </div>
                 <p className="text-cream/40 text-sm line-clamp-2 mb-4 flex-1">{room.description}</p>

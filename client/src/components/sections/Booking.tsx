@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import type { BookingForm, ReservationForm } from '../../types';
-import { fetchRooms, checkAvailability, submitBooking, submitReservation, formatWhatsAppNumber } from '../../lib/api';
+import { fetchRooms, checkAvailability, submitBooking, submitReservation, formatWhatsAppNumber, getCachedData, setCachedData } from '../../lib/api';
+import { rooms as initialRooms } from '../../data/rooms';
 import toast from 'react-hot-toast';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -60,12 +61,17 @@ function BookingTab() {
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
-  const [dynamicRooms, setDynamicRooms] = useState<any[]>([]);
+  const [dynamicRooms, setDynamicRooms] = useState<any[]>(() => getCachedData('rooms', initialRooms));
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const { content } = useSiteContent();
 
   useEffect(() => {
-    fetchRooms().then(data => setDynamicRooms(data)).catch(console.error);
+    fetchRooms().then(data => {
+      if (data && data.length > 0) {
+        setDynamicRooms(data);
+        setCachedData('rooms', data);
+      }
+    }).catch(console.error);
   }, []);
   
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<BookingForm>();
@@ -111,7 +117,7 @@ function BookingTab() {
       return;
     }
     if (selectedRoom && totalGuests > selectedRoom.capacity) {
-      toast.error(`This property accommodates up to ${selectedRoom.capacity} guests.`);
+      toast.error(`"${selectedRoom.name}" accommodates up to ${selectedRoom.capacity} guests per room. For larger parties, please select a Group Room.`);
       return;
     }
 
@@ -204,7 +210,9 @@ function BookingTab() {
           <select {...register('roomType', { required: true })} className="luxury-input">
             <option value="">Select a room...</option>
             {dynamicRooms.map(r => (
-              <option key={r.id} value={r.name}>{r.name} — ₹{r.price}/person (Max {r.capacity} guests)</option>
+              <option key={r.id} value={r.name}>
+                {r.name} — ₹{r.price}/person (Max {r.capacity} guests{r.totalUnits && r.totalUnits > 1 ? ` • ${r.totalUnits} rooms available` : ''})
+              </option>
             ))}
           </select>
         </div>
@@ -221,23 +229,33 @@ function BookingTab() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Adults (12+ yrs)</label>
-          <div className="flex items-center gap-3 luxury-input">
-            <button type="button" onClick={() => setAdults(a => Math.max(1, a - 1))} className="text-gold text-lg w-6 text-center">−</button>
-            <span className="flex-1 text-center text-cream">{adults} Adult{adults > 1 ? 's' : ''}</span>
-            <button type="button" onClick={() => setAdults(a => Math.min(Math.max(1, maxGuests - children), a + 1))} className="text-gold text-lg w-6 text-center">+</button>
+      <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Adults (12+ yrs)</label>
+            <div className="flex items-center gap-3 luxury-input">
+              <button type="button" onClick={() => setAdults(a => Math.max(1, a - 1))} className="text-gold text-lg w-6 text-center">−</button>
+              <span className="flex-1 text-center text-cream">{adults} Adult{adults > 1 ? 's' : ''}</span>
+              <button type="button" onClick={() => setAdults(a => Math.min(Math.max(1, maxGuests - children), a + 1))} className="text-gold text-lg w-6 text-center">+</button>
+            </div>
+          </div>
+          <div>
+            <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Children (under 12 yrs)</label>
+            <div className="flex items-center gap-3 luxury-input">
+              <button type="button" onClick={() => setChildren(c => Math.max(0, c - 1))} className="text-gold text-lg w-6 text-center">−</button>
+              <span className="flex-1 text-center text-cream">{children} Child{children !== 1 ? 'ren' : ''}</span>
+              <button type="button" onClick={() => setChildren(c => Math.min(Math.max(0, maxGuests - adults), c + 1))} className="text-gold text-lg w-6 text-center">+</button>
+            </div>
           </div>
         </div>
-        <div>
-          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Children (under 12 yrs)</label>
-          <div className="flex items-center gap-3 luxury-input">
-            <button type="button" onClick={() => setChildren(c => Math.max(0, c - 1))} className="text-gold text-lg w-6 text-center">−</button>
-            <span className="flex-1 text-center text-cream">{children} Child{children !== 1 ? 'ren' : ''}</span>
-            <button type="button" onClick={() => setChildren(c => Math.min(Math.max(0, maxGuests - adults), c + 1))} className="text-gold text-lg w-6 text-center">+</button>
-          </div>
-        </div>
+        {selectedRoom && (
+          <p className="text-xs text-cream/50 mt-2">
+            Note: <span className="text-gold font-medium">{selectedRoom.name}</span> accommodates up to {selectedRoom.capacity} guests per room.
+            {selectedRoom.capacity === 2 && dynamicRooms.some(r => r.capacity >= 4) && (
+              <span> For larger groups (4 to 6 people), please select a <strong>Group Room</strong> from the dropdown above.</span>
+            )}
+          </p>
+        )}
       </div>
 
       <div>
