@@ -7,6 +7,7 @@ import { rooms as initialRooms } from '../../data/rooms';
 import toast from 'react-hot-toast';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { FaWhatsapp } from 'react-icons/fa';
+import { Plus, Minus } from 'lucide-react';
 
 const timeSlots = ['12:00 PM', '1:00 PM', '2:00 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM'];
 const occasions = ['None', 'Anniversary', 'Birthday', 'Honeymoon', 'Business Dinner', 'Proposal', 'Other'];
@@ -273,99 +274,123 @@ function BookingTab() {
       </div>
 
       <div>
-        <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">
+        <label className="block font-body text-xs text-cream/70 tracking-wider uppercase mb-2">
           Guests & Occupancy
         </label>
-        <div className="rounded-xl border border-gold/20 bg-black/25 backdrop-blur-sm divide-y divide-white/5 overflow-hidden">
+        <div className="rounded-xl border border-black/10 bg-white/80 shadow-sm divide-y divide-black/[0.08] overflow-hidden">
           {/* Adults (12+ yrs) */}
-          <div className="p-4 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
+          <div className="p-4 flex items-center justify-between gap-4 hover:bg-black/[0.02] transition-colors">
             <div>
-              <div className="font-body text-sm font-medium text-cream">Adults</div>
-              <div className="font-body text-xs text-cream/50">Age 12+ · Full price</div>
+              <div className="font-body text-sm font-semibold text-neutral-900">Adults</div>
+              <div className="font-body text-xs text-neutral-500">Age 12+ · Full price</div>
             </div>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setAdults(a => Math.max(1, a - 1))}
                 disabled={adults <= 1}
-                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                  adults <= 1
+                    ? 'border border-neutral-300 text-neutral-300 cursor-not-allowed'
+                    : 'border border-neutral-500 text-neutral-800 hover:border-gold hover:text-gold-dark hover:bg-gold/10 active:scale-95'
+                }`}
                 aria-label="Decrease adults"
               >
-                −
+                <Minus className="w-4 h-4 stroke-[2.5]" />
               </button>
-              <span className="w-8 text-center font-body text-base font-medium text-cream">
+              <span className="w-8 text-center font-body text-base font-bold text-neutral-900">
                 {adults}
               </span>
               <button
                 type="button"
                 onClick={() => setAdults(a => Math.min(Math.min(maxAdultsAllowed, maxCombinedOccupants - kidsHalf - kidsFree), a + 1))}
                 disabled={adults >= maxAdultsAllowed || (adults + kidsHalf + kidsFree) >= maxCombinedOccupants}
-                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                  adults >= maxAdultsAllowed || (adults + kidsHalf + kidsFree) >= maxCombinedOccupants
+                    ? 'border border-neutral-300 text-neutral-300 cursor-not-allowed'
+                    : 'border border-neutral-500 text-neutral-800 hover:border-gold hover:text-gold-dark hover:bg-gold/10 active:scale-95'
+                }`}
                 aria-label="Increase adults"
               >
-                +
+                <Plus className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
           </div>
 
           {/* Children (5-11 yrs) */}
-          <div className="p-4 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
+          <div className="p-4 flex items-center justify-between gap-4 hover:bg-black/[0.02] transition-colors">
             <div>
-              <div className="font-body text-sm font-medium text-cream">Children</div>
-              <div className="font-body text-xs text-cream/50">Age 5–11 yrs · Half price (50%)</div>
+              <div className="font-body text-sm font-semibold text-neutral-900">Children</div>
+              <div className="font-body text-xs text-neutral-500">Age 5–11 yrs · Half price (50%)</div>
             </div>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setKidsHalf(c => Math.max(0, c - 1))}
                 disabled={kidsHalf <= 0}
-                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                  kidsHalf <= 0
+                    ? 'border border-neutral-300 text-neutral-300 cursor-not-allowed'
+                    : 'border border-neutral-500 text-neutral-800 hover:border-gold hover:text-gold-dark hover:bg-gold/10 active:scale-95'
+                }`}
                 aria-label="Decrease children"
               >
-                −
+                <Minus className="w-4 h-4 stroke-[2.5]" />
               </button>
-              <span className="w-8 text-center font-body text-base font-medium text-cream">
+              <span className="w-8 text-center font-body text-base font-bold text-neutral-900">
                 {kidsHalf}
               </span>
               <button
                 type="button"
                 onClick={() => setKidsHalf(c => Math.min(Math.max(0, maxCombinedOccupants - adults - kidsFree), c + 1))}
                 disabled={(adults + kidsHalf + kidsFree) >= maxCombinedOccupants}
-                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                  (adults + kidsHalf + kidsFree) >= maxCombinedOccupants
+                    ? 'border border-neutral-300 text-neutral-300 cursor-not-allowed'
+                    : 'border border-neutral-500 text-neutral-800 hover:border-gold hover:text-gold-dark hover:bg-gold/10 active:scale-95'
+                }`}
                 aria-label="Increase children"
               >
-                +
+                <Plus className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
           </div>
 
           {/* Infants (Under 5 yrs) */}
-          <div className="p-4 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
+          <div className="p-4 flex items-center justify-between gap-4 hover:bg-black/[0.02] transition-colors">
             <div>
-              <div className="font-body text-sm font-medium text-cream">Infants / Toddlers</div>
-              <div className="font-body text-xs text-cream/50">Under 5 yrs · Free</div>
+              <div className="font-body text-sm font-semibold text-neutral-900">Infants / Toddlers</div>
+              <div className="font-body text-xs text-neutral-500">Under 5 yrs · Free</div>
             </div>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setKidsFree(c => Math.max(0, c - 1))}
                 disabled={kidsFree <= 0}
-                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                  kidsFree <= 0
+                    ? 'border border-neutral-300 text-neutral-300 cursor-not-allowed'
+                    : 'border border-neutral-500 text-neutral-800 hover:border-gold hover:text-gold-dark hover:bg-gold/10 active:scale-95'
+                }`}
                 aria-label="Decrease infants"
               >
-                −
+                <Minus className="w-4 h-4 stroke-[2.5]" />
               </button>
-              <span className="w-8 text-center font-body text-base font-medium text-cream">
+              <span className="w-8 text-center font-body text-base font-bold text-neutral-900">
                 {kidsFree}
               </span>
               <button
                 type="button"
                 onClick={() => setKidsFree(c => Math.min(Math.max(0, maxCombinedOccupants - adults - kidsHalf), c + 1))}
                 disabled={(adults + kidsHalf + kidsFree) >= maxCombinedOccupants}
-                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                  (adults + kidsHalf + kidsFree) >= maxCombinedOccupants
+                    ? 'border border-neutral-300 text-neutral-300 cursor-not-allowed'
+                    : 'border border-neutral-500 text-neutral-800 hover:border-gold hover:text-gold-dark hover:bg-gold/10 active:scale-95'
+                }`}
                 aria-label="Increase infants"
               >
-                +
+                <Plus className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
           </div>
