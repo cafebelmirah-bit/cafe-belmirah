@@ -86,11 +86,8 @@ function RoomCard({ room, index }: { room: any; index: number }) {
         <div className="flex items-start justify-between mb-3">
           <div>
             <h3 className="font-display text-xl text-cream mb-1">{room.name}</h3>
-            <div className="flex flex-wrap items-center gap-3 text-cream/40 text-xs">
+            <div className="flex items-center gap-3 text-cream/40 text-xs">
               <span>👥 Up to {room.capacity} guests</span>
-              {room.totalUnits && room.totalUnits > 1 && (
-                <span className="text-gold/80">🏡 {room.totalUnits} rooms</span>
-              )}
               <span>📐 {room.size}</span>
             </div>
           </div>

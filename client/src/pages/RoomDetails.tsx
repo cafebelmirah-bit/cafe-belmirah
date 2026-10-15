@@ -7,7 +7,6 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import { fetchRoomById } from '../lib/api';
-import { rooms as initialRooms } from '../data/rooms';
 import JsonLd from '../components/seo/JsonLd';
 
 const amenityIcons: Record<string, string> = {
@@ -44,24 +43,12 @@ export default function RoomDetails() {
     if (id) {
       fetchRoomById(id)
         .then((res) => {
-          if (res.success && res.item) {
+          if (res.success) {
             setRoom(res.item);
             document.title = `${res.item.name} — Luxury Glamping | Café Belmirah, Pawna Lake`;
-          } else {
-            const fallback = initialRooms.find(r => String(r.id) === String(id));
-            if (fallback) {
-              setRoom(fallback);
-              document.title = `${fallback.name} — Luxury Glamping | Café Belmirah, Pawna Lake`;
-            }
           }
         })
-        .catch(() => {
-          const fallback = initialRooms.find(r => String(r.id) === String(id));
-          if (fallback) {
-            setRoom(fallback);
-            document.title = `${fallback.name} — Luxury Glamping | Café Belmirah, Pawna Lake`;
-          }
-        })
+        .catch(console.error)
         .finally(() => setLoading(false));
     }
   }, [id]);

@@ -31,21 +31,19 @@ export type MenuCategory =
   | 'fresh-juices';
 
 export interface Room {
-  id: string | number;
+  id: string;
   name: string;
-  type?: string;
+  type: 'glamping-tent' | 'luxury-suite' | 'forest-cabin' | 'mountain-villa';
   description: string;
   price: number;
   image: string;
-  gallery?: string[];
-  images?: string[];
+  gallery: string[];
   capacity: number;
-  totalUnits?: number;
   amenities: string[];
-  size?: string;
-  view?: string;
-  rating?: number;
-  reviews?: number;
+  size: string;
+  view: string;
+  rating: number;
+  reviews: number;
 }
 
 export interface Experience {

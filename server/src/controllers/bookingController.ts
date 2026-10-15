@@ -18,30 +18,20 @@ export const checkAvailability = async (req: Request, res: Response) => {
     }
 
     if (guests && guests > room.capacity) {
-      return res.status(400).json({
-        success: false,
-        error: `"${room.name}" accommodates up to ${room.capacity} guests. For larger groups, please select a Group Room or book multiple rooms.`
-      });
+      return res.status(400).json({ success: false, error: `This property can only accommodate up to ${room.capacity} guests.` });
     }
 
-    // Only confirmed bookings lock inventory!
-    // Unconfirmed 'pending' WhatsApp inquiries do not block dates unless confirmed by Admin.
     const overlappingBookingsCount = await Booking.count({
       where: {
         roomType: roomType,
-        status: 'confirmed',
+        status: { [Op.ne]: 'cancelled' },
         checkIn: { [Op.lt]: checkOut },
         checkOut: { [Op.gt]: checkIn }
       }
     });
 
-    const totalAvailableUnits = room.totalUnits || 1;
-
-    if (overlappingBookingsCount >= totalAvailableUnits) {
-      return res.status(400).json({
-        success: false,
-        error: `All ${totalAvailableUnits > 1 ? totalAvailableUnits + ' units of ' : ''}"${room.name}" are fully booked for the selected dates.`
-      });
+    if (overlappingBookingsCount >= room.totalUnits) {
+      return res.status(400).json({ success: false, error: 'This property is fully booked for the selected dates.' });
     }
 
     res.json({ success: true, available: true });
@@ -60,28 +50,20 @@ export const createBooking = async (req: Request, res: Response) => {
     }
 
     if (guests && guests > room.capacity) {
-      return res.status(400).json({
-        success: false,
-        error: `"${room.name}" accommodates up to ${room.capacity} guests. For larger groups, please select a Group Room or book multiple rooms.`
-      });
+      return res.status(400).json({ success: false, error: `This property can only accommodate up to ${room.capacity} guests.` });
     }
 
     const overlappingBookingsCount = await Booking.count({
       where: {
         roomType: roomType,
-        status: 'confirmed',
+        status: { [Op.ne]: 'cancelled' },
         checkIn: { [Op.lt]: checkOut },
         checkOut: { [Op.gt]: checkIn }
       }
     });
 
-    const totalAvailableUnits = room.totalUnits || 1;
-
-    if (overlappingBookingsCount >= totalAvailableUnits) {
-      return res.status(400).json({
-        success: false,
-        error: `All ${totalAvailableUnits > 1 ? totalAvailableUnits + ' units of ' : ''}"${room.name}" are fully booked for the selected dates.`
-      });
+    if (overlappingBookingsCount >= room.totalUnits) {
+      return res.status(400).json({ success: false, error: 'This property is fully booked for the selected dates.' });
     }
     
     const booking = await Booking.create(req.body);

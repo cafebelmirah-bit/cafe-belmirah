@@ -278,14 +278,6 @@ export const getCachedData = <T>(key: string, fallback: T): T => {
     const item = localStorage.getItem(`belmirah_cache_${key}`);
     if (item) {
       const parsed = JSON.parse(item);
-      // Ensure cached rooms match current physical room setup (Scenic Room)
-      if (key === 'rooms' && Array.isArray(parsed)) {
-        const hasScenic = parsed.some((r: any) => r.name === 'Scenic Room');
-        if (!hasScenic) {
-          localStorage.removeItem(`belmirah_cache_${key}`);
-          return fallback;
-        }
-      }
       if (Array.isArray(fallback) ? Array.isArray(parsed) && parsed.length > 0 : !!parsed) {
         return parsed;
       }
