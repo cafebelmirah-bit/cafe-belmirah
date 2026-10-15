@@ -74,8 +74,17 @@ ${data.message}`;
     }
 
     setSubmitted(true);
-    toast.success('Forwarding your message to WhatsApp...');
-    window.open(waLink, '_blank');
+    toast.success('Opening WhatsApp with your message...');
+
+    const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = waLink;
+    } else {
+      const opened = window.open(waLink, '_blank');
+      if (!opened || opened.closed || typeof opened.closed === 'undefined') {
+        window.location.href = waLink;
+      }
+    }
   };
 
   return (

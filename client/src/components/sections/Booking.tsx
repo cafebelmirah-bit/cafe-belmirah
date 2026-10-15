@@ -168,20 +168,26 @@ function BookingTab() {
       // 1. Verify availability
       await checkAvailability(data.roomType, data.checkIn, data.checkOut, totalGuests);
 
-      // 2. Submit booking to backend database
+      // 2. Submit booking to backend database (with graceful fallback so guest is never blocked)
       const specialReq = [
         data.specialRequests,
         `Party: ${describeGuests()}`,
         `Bedding: ${getBeddingSetup()}`
       ].filter(Boolean).join(' | ');
 
-      const res = await submitBooking({
-        ...data,
-        guests: totalGuests,
-        specialRequests: specialReq
-      });
-
-      const refId = res.data?.referenceId || `BEL-${Date.now().toString(36).toUpperCase()}`;
+      let refId = `BEL-${Date.now().toString(36).toUpperCase()}`;
+      try {
+        const res = await submitBooking({
+          ...data,
+          guests: totalGuests,
+          specialRequests: specialReq
+        });
+        if (res?.data?.referenceId) {
+          refId = res.data.referenceId;
+        }
+      } catch (saveError) {
+        console.warn('Backend booking save warning (continuing to WhatsApp):', saveError);
+      }
       setSubmittedId(refId);
 
       // 3. Format owner phone number
@@ -220,8 +226,18 @@ function BookingTab() {
       const waLink = `https://wa.me/${rawPhone}?text=${encodeURIComponent(message)}`;
       setWhatsappUrl(waLink);
 
-      toast.success('Booking submitted! Forwarding to WhatsApp...');
-      window.open(waLink, '_blank');
+      toast.success('Opening WhatsApp with your booking details...');
+
+      // Direct WhatsApp dispatch (prevents popup blockers on iOS/Android & desktop)
+      const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.location.href = waLink;
+      } else {
+        const opened = window.open(waLink, '_blank');
+        if (!opened || opened.closed || typeof opened.closed === 'undefined') {
+          window.location.href = waLink;
+        }
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to submit booking. Please try again.');
     } finally {
@@ -495,8 +511,17 @@ export function ReservationTab() {
       const waLink = `https://wa.me/${rawPhone}?text=${encodeURIComponent(message)}`;
       setWhatsappUrl(waLink);
 
-      toast.success('Reservation submitted! Forwarding to WhatsApp...');
-      window.open(waLink, '_blank');
+      toast.success('Opening WhatsApp with your reservation details...');
+
+      const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.location.href = waLink;
+      } else {
+        const opened = window.open(waLink, '_blank');
+        if (!opened || opened.closed || typeof opened.closed === 'undefined') {
+          window.location.href = waLink;
+        }
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to submit reservation. Please try again.');
     }
