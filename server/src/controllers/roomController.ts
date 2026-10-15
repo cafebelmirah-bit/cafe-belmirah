@@ -1,9 +1,24 @@
 import { Request, Response } from 'express';
 import { Room } from '../models/Room';
+import { Op } from 'sequelize';
 
 export const getRooms = async (req: Request, res: Response) => {
   try {
-    const items = await Room.findAll();
+    const items = await Room.findAll({
+      where: {
+        name: {
+          [Op.notIn]: [
+            'Scenic Room',
+            'Group Room (6 Person)',
+            'Group Room (4 Person)',
+            'Royal Glamping Tent',
+            'Forest Hideaway Cabin',
+            'Summit Mountain Villa',
+            'Belmirah Luxury Suite'
+          ]
+        }
+      }
+    });
     res.json(items);
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });

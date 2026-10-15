@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import type { BookingForm, ReservationForm } from '../../types';
-import { fetchRooms, checkAvailability, submitBooking, submitReservation, formatWhatsAppNumber } from '../../lib/api';
+import { fetchRooms, checkAvailability, submitBooking, submitReservation, formatWhatsAppNumber, getCachedData, setCachedData } from '../../lib/api';
+import { rooms as initialRooms } from '../../data/rooms';
 import toast from 'react-hot-toast';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -60,12 +61,17 @@ function BookingTab() {
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
-  const [dynamicRooms, setDynamicRooms] = useState<any[]>([]);
+  const [dynamicRooms, setDynamicRooms] = useState<any[]>(() => getCachedData('rooms', initialRooms));
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const { content } = useSiteContent();
 
   useEffect(() => {
-    fetchRooms().then(data => setDynamicRooms(data)).catch(console.error);
+    fetchRooms().then(data => {
+      if (data && data.length > 0) {
+        setDynamicRooms(data);
+        setCachedData('rooms', data);
+      }
+    }).catch(console.error);
   }, []);
   
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<BookingForm>();

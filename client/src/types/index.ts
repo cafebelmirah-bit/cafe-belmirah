@@ -33,7 +33,7 @@ export type MenuCategory =
 export interface Room {
   id: string;
   name: string;
-  type: 'glamping-tent' | 'luxury-suite' | 'forest-cabin' | 'mountain-villa';
+  type: 'glamping-tent' | 'luxury-suite' | 'forest-cabin' | 'mountain-villa' | 'scenic-room' | 'group-room' | string;
   description: string;
   price: number;
   image: string;

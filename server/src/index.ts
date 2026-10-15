@@ -60,6 +60,20 @@ const startServer = async () => {
       // Column already updated or non-fatal
     }
     await Room.sync();
+    // Clean up unwanted seeded and dummy rooms
+    await Room.destroy({
+      where: {
+        name: [
+          'Scenic Room',
+          'Group Room (6 Person)',
+          'Group Room (4 Person)',
+          'Royal Glamping Tent',
+          'Forest Hideaway Cabin',
+          'Summit Mountain Villa',
+          'Belmirah Luxury Suite'
+        ]
+      }
+    });
     await Testimonial.sync();
     await GalleryImage.sync();
     await Experience.sync();

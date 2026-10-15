@@ -109,10 +109,21 @@ export const deleteMenuItem = async (id: number) => {
   return response.data;
 };
 
+export const EXCLUDED_ROOM_NAMES = [
+  'Scenic Room',
+  'Group Room (6 Person)',
+  'Group Room (4 Person)',
+  'Royal Glamping Tent',
+  'Forest Hideaway Cabin',
+  'Summit Mountain Villa',
+  'Belmirah Luxury Suite'
+];
+
 // Rooms
 export const fetchRooms = async () => {
   const response = await api.get('/rooms');
-  return response.data;
+  const items = Array.isArray(response.data) ? response.data : (response.data?.items || []);
+  return items.filter((r: any) => !EXCLUDED_ROOM_NAMES.includes(r.name));
 };
 
 export const fetchRoomById = async (id: string | number) => {
@@ -277,7 +288,10 @@ export const getCachedData = <T>(key: string, fallback: T): T => {
   try {
     const item = localStorage.getItem(`belmirah_cache_${key}`);
     if (item) {
-      const parsed = JSON.parse(item);
+      let parsed = JSON.parse(item);
+      if (key === 'rooms' && Array.isArray(parsed)) {
+        parsed = parsed.filter((r: any) => !EXCLUDED_ROOM_NAMES.includes(r.name));
+      }
       if (Array.isArray(fallback) ? Array.isArray(parsed) && parsed.length > 0 : !!parsed) {
         return parsed;
       }
