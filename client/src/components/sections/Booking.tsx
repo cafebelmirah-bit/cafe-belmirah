@@ -299,17 +299,6 @@ function BookingTab() {
         </div>
       </div>
 
-      <div className="bg-black/20 p-3.5 rounded-lg border border-gold/20 text-xs space-y-1 -mt-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-gold font-medium">🛏️ Bedding Setup:</span>
-          <span className="text-cream font-medium">{getBeddingSetup()}</span>
-        </div>
-        <p className="text-cream/50 text-[11px] leading-relaxed">
-          {isScenic 
-            ? 'The Scenic Room features 1 luxury King Bed. If booking with 2 children or a 12+ teenager, a comfortable extra foam mattress with fresh linens is prepared in your room.'
-            : 'AC Garden-View Room features multiple beds designed comfortably for families and groups of up to 6 guests.'}
-        </p>
-      </div>
 
       <div>
         <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Special Requests</label>
