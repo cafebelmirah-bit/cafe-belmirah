@@ -272,29 +272,102 @@ function BookingTab() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Adults (12+ yrs) · full price</label>
-          <div className="flex items-center gap-3 luxury-input">
-            <button type="button" onClick={() => setAdults(a => Math.max(1, a - 1))} className="text-gold text-lg w-6 text-center">−</button>
-            <span className="flex-1 text-center text-cream">{adults} Adult{adults > 1 ? 's' : ''}</span>
-            <button type="button" onClick={() => setAdults(a => Math.min(Math.min(maxAdultsAllowed, maxCombinedOccupants - kidsHalf - kidsFree), a + 1))} className="text-gold text-lg w-6 text-center">+</button>
+      <div>
+        <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">
+          Guests & Occupancy
+        </label>
+        <div className="rounded-xl border border-gold/20 bg-black/25 backdrop-blur-sm divide-y divide-white/5 overflow-hidden">
+          {/* Adults (12+ yrs) */}
+          <div className="p-4 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
+            <div>
+              <div className="font-body text-sm font-medium text-cream">Adults</div>
+              <div className="font-body text-xs text-cream/50">Age 12+ · Full price</div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setAdults(a => Math.max(1, a - 1))}
+                disabled={adults <= 1}
+                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                aria-label="Decrease adults"
+              >
+                −
+              </button>
+              <span className="w-8 text-center font-body text-base font-medium text-cream">
+                {adults}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAdults(a => Math.min(Math.min(maxAdultsAllowed, maxCombinedOccupants - kidsHalf - kidsFree), a + 1))}
+                disabled={adults >= maxAdultsAllowed || (adults + kidsHalf + kidsFree) >= maxCombinedOccupants}
+                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                aria-label="Increase adults"
+              >
+                +
+              </button>
+            </div>
           </div>
-        </div>
-        <div>
-          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Children (5-11 yrs) · half price</label>
-          <div className="flex items-center gap-3 luxury-input">
-            <button type="button" onClick={() => setKidsHalf(c => Math.max(0, c - 1))} className="text-gold text-lg w-6 text-center">−</button>
-            <span className="flex-1 text-center text-cream">{kidsHalf} Child{kidsHalf !== 1 ? 'ren' : ''}</span>
-            <button type="button" onClick={() => setKidsHalf(c => Math.min(Math.max(0, maxCombinedOccupants - adults - kidsFree), c + 1))} className="text-gold text-lg w-6 text-center">+</button>
+
+          {/* Children (5-11 yrs) */}
+          <div className="p-4 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
+            <div>
+              <div className="font-body text-sm font-medium text-cream">Children</div>
+              <div className="font-body text-xs text-cream/50">Age 5–11 yrs · Half price (50%)</div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setKidsHalf(c => Math.max(0, c - 1))}
+                disabled={kidsHalf <= 0}
+                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                aria-label="Decrease children"
+              >
+                −
+              </button>
+              <span className="w-8 text-center font-body text-base font-medium text-cream">
+                {kidsHalf}
+              </span>
+              <button
+                type="button"
+                onClick={() => setKidsHalf(c => Math.min(Math.max(0, maxCombinedOccupants - adults - kidsFree), c + 1))}
+                disabled={(adults + kidsHalf + kidsFree) >= maxCombinedOccupants}
+                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                aria-label="Increase children"
+              >
+                +
+              </button>
+            </div>
           </div>
-        </div>
-        <div>
-          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Under 5 yrs · free</label>
-          <div className="flex items-center gap-3 luxury-input">
-            <button type="button" onClick={() => setKidsFree(c => Math.max(0, c - 1))} className="text-gold text-lg w-6 text-center">−</button>
-            <span className="flex-1 text-center text-cream">{kidsFree} Child{kidsFree !== 1 ? 'ren' : ''}</span>
-            <button type="button" onClick={() => setKidsFree(c => Math.min(Math.max(0, maxCombinedOccupants - adults - kidsHalf), c + 1))} className="text-gold text-lg w-6 text-center">+</button>
+
+          {/* Infants (Under 5 yrs) */}
+          <div className="p-4 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
+            <div>
+              <div className="font-body text-sm font-medium text-cream">Infants / Toddlers</div>
+              <div className="font-body text-xs text-cream/50">Under 5 yrs · Free</div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setKidsFree(c => Math.max(0, c - 1))}
+                disabled={kidsFree <= 0}
+                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                aria-label="Decrease infants"
+              >
+                −
+              </button>
+              <span className="w-8 text-center font-body text-base font-medium text-cream">
+                {kidsFree}
+              </span>
+              <button
+                type="button"
+                onClick={() => setKidsFree(c => Math.min(Math.max(0, maxCombinedOccupants - adults - kidsHalf), c + 1))}
+                disabled={(adults + kidsHalf + kidsFree) >= maxCombinedOccupants}
+                className="w-9 h-9 rounded-full border border-gold/30 text-gold flex items-center justify-center text-lg hover:bg-gold/10 hover:border-gold transition-all disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                aria-label="Increase infants"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
       </div>
