@@ -74,6 +74,13 @@ const startServer = async () => {
         ]
       }
     });
+
+    // Ensure Scenic Lake-View Rooms has 3 physical units in inventory
+    const scenicRoom = await Room.findOne({ where: { name: 'Scenic Lake-View Rooms' } });
+    if (scenicRoom && (!scenicRoom.totalUnits || scenicRoom.totalUnits < 3)) {
+      await scenicRoom.update({ totalUnits: 3 });
+      console.log('Ensured Scenic Lake-View Rooms totalUnits = 3');
+    }
     await Testimonial.sync();
     await GalleryImage.sync();
     await Experience.sync();

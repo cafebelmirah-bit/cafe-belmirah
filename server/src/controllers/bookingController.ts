@@ -17,21 +17,33 @@ export const checkAvailability = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Invalid room type selected' });
     }
 
-    if (guests && guests > room.capacity) {
-      return res.status(400).json({ success: false, error: `This property can only accommodate up to ${room.capacity} guests.` });
+    // For rooms with base capacity 2 (Scenic Room), allow up to 4 guests (with extra foam mattress for children / 3rd guest)
+    const maxAllowedGuests = room.capacity === 2 ? 4 : room.capacity;
+    if (guests && guests > maxAllowedGuests) {
+      return res.status(400).json({
+        success: false,
+        error: `"${room.name}" accommodates up to ${maxAllowedGuests} guests (with extra foam mattress for children / 3rd guest). For larger groups, please select a Group Room.`
+      });
     }
 
+    // Only confirmed bookings lock inventory!
+    // Unconfirmed 'pending' WhatsApp inquiries do not block dates unless confirmed by Admin.
     const overlappingBookingsCount = await Booking.count({
       where: {
         roomType: roomType,
-        status: { [Op.ne]: 'cancelled' },
+        status: 'confirmed',
         checkIn: { [Op.lt]: checkOut },
         checkOut: { [Op.gt]: checkIn }
       }
     });
 
-    if (overlappingBookingsCount >= room.totalUnits) {
-      return res.status(400).json({ success: false, error: 'This property is fully booked for the selected dates.' });
+    const totalAvailableUnits = room.totalUnits || 1;
+
+    if (overlappingBookingsCount >= totalAvailableUnits) {
+      return res.status(400).json({
+        success: false,
+        error: `All ${totalAvailableUnits > 1 ? totalAvailableUnits + ' units of ' : ''}"${room.name}" are fully booked for the selected dates.`
+      });
     }
 
     res.json({ success: true, available: true });
@@ -49,21 +61,30 @@ export const createBooking = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Invalid room type selected' });
     }
 
-    if (guests && guests > room.capacity) {
-      return res.status(400).json({ success: false, error: `This property can only accommodate up to ${room.capacity} guests.` });
+    const maxAllowedGuests = room.capacity === 2 ? 4 : room.capacity;
+    if (guests && guests > maxAllowedGuests) {
+      return res.status(400).json({
+        success: false,
+        error: `"${room.name}" accommodates up to ${maxAllowedGuests} guests (with extra foam mattress for children / 3rd guest). For larger groups, please select a Group Room.`
+      });
     }
 
     const overlappingBookingsCount = await Booking.count({
       where: {
         roomType: roomType,
-        status: { [Op.ne]: 'cancelled' },
+        status: 'confirmed',
         checkIn: { [Op.lt]: checkOut },
         checkOut: { [Op.gt]: checkIn }
       }
     });
 
-    if (overlappingBookingsCount >= room.totalUnits) {
-      return res.status(400).json({ success: false, error: 'This property is fully booked for the selected dates.' });
+    const totalAvailableUnits = room.totalUnits || 1;
+
+    if (overlappingBookingsCount >= totalAvailableUnits) {
+      return res.status(400).json({
+        success: false,
+        error: `All ${totalAvailableUnits > 1 ? totalAvailableUnits + ' units of ' : ''}"${room.name}" are fully booked for the selected dates.`
+      });
     }
     
     const booking = await Booking.create(req.body);

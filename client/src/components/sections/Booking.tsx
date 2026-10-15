@@ -11,6 +11,9 @@ import { FaWhatsapp } from 'react-icons/fa';
 const timeSlots = ['12:00 PM', '1:00 PM', '2:00 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM'];
 const occasions = ['None', 'Anniversary', 'Birthday', 'Honeymoon', 'Business Dinner', 'Proposal', 'Other'];
 
+// Child pricing: age 12+ pays full (counted as adults), 5-11 pays this fraction of the adult rate, under 5 stays free.
+const CHILD_HALF_RATE = 0.5;
+
 function SuccessMessage({ type, referenceId, whatsappUrl }: { type: 'booking' | 'reservation', referenceId: string, whatsappUrl?: string }) {
   return (
     <motion.div
@@ -60,7 +63,11 @@ function BookingTab() {
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
   const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
+  const [kidsHalf, setKidsHalf] = useState(0); // 5-11 yrs, half price
+  const [kidsFree, setKidsFree] = useState(0); // under 5 yrs, free
+  const totalChildren = kidsHalf + kidsFree;
+  // Only children aged 5-11 take up one of the room's guest places; under-5s are free and not counted.
+  const children = kidsHalf;
   const [dynamicRooms, setDynamicRooms] = useState<any[]>(() => getCachedData('rooms', initialRooms));
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const { content } = useSiteContent();
@@ -81,18 +88,24 @@ function BookingTab() {
   const watchCheckOut = watch('checkOut');
 
   const selectedRoom = dynamicRooms.find(r => r.name === watchRoomType);
-  const maxGuests = selectedRoom ? selectedRoom.capacity : 8;
+  const isScenic = selectedRoom ? selectedRoom.name.toLowerCase().includes('scenic') : false;
+  // Scenic Room: 1 King bed, allows up to 3 adults OR up to 4 total guests with extra foam mattress
+  const maxAdultsAllowed = isScenic ? 3 : (selectedRoom ? selectedRoom.capacity : 6);
+  const maxCombinedOccupants = isScenic ? 4 : (selectedRoom ? selectedRoom.capacity : 6);
 
   useEffect(() => {
-    if (selectedRoom && (adults + children) > selectedRoom.capacity) {
-      if (adults > selectedRoom.capacity) {
-        setAdults(selectedRoom.capacity);
-        setChildren(0);
-      } else {
-        setChildren(selectedRoom.capacity - adults);
+    if (selectedRoom) {
+      if (adults > maxAdultsAllowed) {
+        setAdults(maxAdultsAllowed);
+      }
+      if ((adults + kidsHalf + kidsFree) > maxCombinedOccupants) {
+        const remaining = Math.max(0, maxCombinedOccupants - adults);
+        const half = Math.min(kidsHalf, remaining);
+        setKidsHalf(half);
+        setKidsFree(Math.min(kidsFree, remaining - half));
       }
     }
-  }, [watchRoomType, selectedRoom, adults, children]);
+  }, [watchRoomType, selectedRoom, adults, kidsHalf, kidsFree, maxAdultsAllowed, maxCombinedOccupants]);
 
   const calculateTotal = () => {
     if (!watchRoomType || !watchCheckIn || !watchCheckOut) return 0;
@@ -100,15 +113,43 @@ function BookingTab() {
     if (!room) return 0;
     
     const pricePerPerson = room.price || 0;
-    const totalGuests = Math.max(1, adults + children);
+    // Adults (12+) pay full, children 5-11 pay half, under 5 are free
+    const chargeableGuests = Math.max(1, adults) + kidsHalf * CHILD_HALF_RATE;
     
     const start = new Date(watchCheckIn);
     const end = new Date(watchCheckOut);
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
     
-    return pricePerPerson * totalGuests * diffDays;
+    return Math.round(pricePerPerson * chargeableGuests * diffDays);
   };
+
+  const getBeddingSetup = () => {
+    if (!selectedRoom) return '';
+    if (isScenic) {
+      if (adults === 3) {
+        return '1 King Bed (2 adults) + 1 Extra Foam Mattress (3rd guest/teen)';
+      }
+      if (totalChildren >= 2) {
+        return '1 King Bed (parents) + 1 Extra Foam Mattress (children)';
+      }
+      if (kidsHalf === 1) {
+        return '1 King Bed (shares with parents) + Extra Foam Mattress available';
+      }
+      if (kidsFree > 0) {
+        return '1 King Bed (shares with parents)';
+      }
+      return '1 King Size Bed';
+    } else {
+      return 'Multiple Beds (suitable for up to 6 guests)';
+    }
+  };
+
+  const describeGuests = () => [
+    `${adults} Adult${adults > 1 ? 's' : ''}`,
+    kidsHalf > 0 ? `${kidsHalf} Child${kidsHalf > 1 ? 'ren' : ''} (5-11 yrs, half price)` : null,
+    kidsFree > 0 ? `${kidsFree} Child${kidsFree > 1 ? 'ren' : ''} (under 5 yrs, free)` : null,
+  ].filter(Boolean).join(', ');
 
   const onBookingSubmit = async (data: BookingForm) => {
     const totalGuests = adults + children;
@@ -116,8 +157,8 @@ function BookingTab() {
       toast.error('Please specify at least 1 guest.');
       return;
     }
-    if (selectedRoom && totalGuests > selectedRoom.capacity) {
-      toast.error(`This property accommodates up to ${selectedRoom.capacity} guests.`);
+    if (selectedRoom && (adults + totalChildren) > maxCombinedOccupants) {
+      toast.error(`"${selectedRoom.name}" accommodates up to ${maxCombinedOccupants} guests (with extra foam mattress for children / 3rd guest).`);
       return;
     }
 
@@ -129,7 +170,8 @@ function BookingTab() {
       // 2. Submit booking to backend database
       const specialReq = [
         data.specialRequests,
-        children > 0 ? `Party: ${adults} Adults, ${children} Children` : null
+        `Party: ${describeGuests()}`,
+        `Bedding: ${getBeddingSetup()}`
       ].filter(Boolean).join(' | ');
 
       const res = await submitBooking({
@@ -150,11 +192,13 @@ function BookingTab() {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
 
       const total = calculateTotal();
-      const guestDetails = `${adults} Adult${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}`;
+      const guestDetails = describeGuests();
       const roomPrice = selectedRoom?.price || 0;
-      const rateBreakdown = diffDays > 1
-        ? `(₹${roomPrice.toLocaleString()}/person × ${totalGuests} guests × ${diffDays} nights)`
-        : `(₹${roomPrice.toLocaleString()}/person × ${totalGuests} guests)`;
+      const rateBreakdown = `(₹${roomPrice.toLocaleString()} × ${adults} adult${adults > 1 ? 's' : ''}`
+        + (kidsHalf > 0 ? ` + ₹${Math.round(roomPrice * CHILD_HALF_RATE).toLocaleString()} × ${kidsHalf} child${kidsHalf > 1 ? 'ren' : ''} (5-11 yrs)` : '')
+        + (kidsFree > 0 ? `, ${kidsFree} under 5 free` : '')
+        + (diffDays > 1 ? ` × ${diffDays} nights` : '')
+        + ')';
 
       // 4. Format WhatsApp message
       const message = 
@@ -167,7 +211,8 @@ function BookingTab() {
 🏡 *Room Type:* ${data.roomType}
 📅 *Check-In:* ${data.checkIn}
 📅 *Check-Out:* ${data.checkOut}${diffDays > 1 ? ` (${diffDays} nights)` : ''}
-👥 *Guests:* ${guestDetails} (Total: ${totalGuests})
+👥 *Guests:* ${guestDetails} (Total: ${adults + totalChildren})
+🛏️ *Bedding Setup:* ${getBeddingSetup()}
 💰 *Estimated Total:* ₹${total.toLocaleString()} ${rateBreakdown}
 📝 *Special Requests:* ${data.specialRequests || 'None'}`;
 
@@ -227,23 +272,43 @@ function BookingTab() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Adults (12+ yrs)</label>
+          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Adults (12+ yrs) · full price</label>
           <div className="flex items-center gap-3 luxury-input">
             <button type="button" onClick={() => setAdults(a => Math.max(1, a - 1))} className="text-gold text-lg w-6 text-center">−</button>
             <span className="flex-1 text-center text-cream">{adults} Adult{adults > 1 ? 's' : ''}</span>
-            <button type="button" onClick={() => setAdults(a => Math.min(Math.max(1, maxGuests - children), a + 1))} className="text-gold text-lg w-6 text-center">+</button>
+            <button type="button" onClick={() => setAdults(a => Math.min(Math.min(maxAdultsAllowed, maxCombinedOccupants - kidsHalf - kidsFree), a + 1))} className="text-gold text-lg w-6 text-center">+</button>
           </div>
         </div>
         <div>
-          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Children (under 12 yrs)</label>
+          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Children (5-11 yrs) · half price</label>
           <div className="flex items-center gap-3 luxury-input">
-            <button type="button" onClick={() => setChildren(c => Math.max(0, c - 1))} className="text-gold text-lg w-6 text-center">−</button>
-            <span className="flex-1 text-center text-cream">{children} Child{children !== 1 ? 'ren' : ''}</span>
-            <button type="button" onClick={() => setChildren(c => Math.min(Math.max(0, maxGuests - adults), c + 1))} className="text-gold text-lg w-6 text-center">+</button>
+            <button type="button" onClick={() => setKidsHalf(c => Math.max(0, c - 1))} className="text-gold text-lg w-6 text-center">−</button>
+            <span className="flex-1 text-center text-cream">{kidsHalf} Child{kidsHalf !== 1 ? 'ren' : ''}</span>
+            <button type="button" onClick={() => setKidsHalf(c => Math.min(Math.max(0, maxCombinedOccupants - adults - kidsFree), c + 1))} className="text-gold text-lg w-6 text-center">+</button>
           </div>
         </div>
+        <div>
+          <label className="block font-body text-xs text-cream/50 tracking-wider uppercase mb-2">Under 5 yrs · free</label>
+          <div className="flex items-center gap-3 luxury-input">
+            <button type="button" onClick={() => setKidsFree(c => Math.max(0, c - 1))} className="text-gold text-lg w-6 text-center">−</button>
+            <span className="flex-1 text-center text-cream">{kidsFree} Child{kidsFree !== 1 ? 'ren' : ''}</span>
+            <button type="button" onClick={() => setKidsFree(c => Math.min(Math.max(0, maxCombinedOccupants - adults - kidsHalf), c + 1))} className="text-gold text-lg w-6 text-center">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-black/20 p-3.5 rounded-lg border border-gold/20 text-xs space-y-1 -mt-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-gold font-medium">🛏️ Bedding Setup:</span>
+          <span className="text-cream font-medium">{getBeddingSetup()}</span>
+        </div>
+        <p className="text-cream/50 text-[11px] leading-relaxed">
+          {isScenic 
+            ? 'The Scenic Room features 1 luxury King Bed. If booking with 2 children or a 12+ teenager, a comfortable extra foam mattress with fresh linens is prepared in your room.'
+            : 'AC Garden-View Room features multiple beds designed comfortably for families and groups of up to 6 guests.'}
+        </p>
       </div>
 
       <div>
@@ -261,7 +326,7 @@ function BookingTab() {
           <div>
             <span className="text-xs uppercase tracking-wider text-cream/50 block">Estimated Amount</span>
             <span className="text-sm text-cream/80">
-              {watchRoomType} ({adults + children} {adults + children > 1 ? 'guests' : 'guest'}
+              {watchRoomType} ({adults + totalChildren} {adults + totalChildren > 1 ? 'guests' : 'guest'}
               {(() => {
                 if (!watchCheckIn || !watchCheckOut) return '';
                 const start = new Date(watchCheckIn);
