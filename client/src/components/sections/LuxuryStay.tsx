@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { fetchRooms } from '../../lib/api';
+import { fetchRooms, getCachedData, setCachedData } from '../../lib/api';
+import { rooms as initialRooms } from '../../data/rooms';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Navigation, Autoplay } from 'swiper/modules';
@@ -152,11 +153,16 @@ function RoomCard({ room, index }: { room: any; index: number }) {
 }
 
 export default function LuxuryStay() {
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>(() => getCachedData('rooms', initialRooms));
   const { content } = useSiteContent();
 
   useEffect(() => {
-    fetchRooms().then(setRooms).catch(console.error);
+    fetchRooms().then((data) => {
+      if (data && data.length > 0) {
+        setRooms(data);
+        setCachedData('rooms', data);
+      }
+    }).catch(console.error);
   }, []);
 
   return (

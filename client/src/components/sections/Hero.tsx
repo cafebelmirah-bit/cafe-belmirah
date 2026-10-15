@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
-import { fetchHeroMedia } from '../../lib/api';
+import { fetchHeroMedia, getCachedData, setCachedData } from '../../lib/api';
 import { useSiteContent } from '../../context/SiteContentContext';
+
+const DEFAULT_HERO_MEDIA = [
+  { id: 'default-1', type: 'image', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=90' },
+  { id: 'default-2', type: 'image', url: 'https://images.unsplash.com/photo-1620221028695-7f26ad849b4f?w=1920&q=90' },
+  { id: 'default-3', type: 'image', url: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=1920&q=90' },
+];
 
 // Particle system for starfield / fireflies
 function Particles({ count = 80, type = 'stars' }: { count?: number; type?: 'stars' | 'fireflies' }) {
@@ -44,7 +50,7 @@ export default function Hero() {
   const ctaRef = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
 
-  const [heroMedia, setHeroMedia] = useState<any[]>([]);
+  const [heroMedia, setHeroMedia] = useState<any[]>(() => getCachedData('hero_media', DEFAULT_HERO_MEDIA));
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const { content } = useSiteContent();
 
@@ -72,12 +78,10 @@ export default function Hero() {
         const data = await fetchHeroMedia();
         if (data && data.length > 0) {
           setHeroMedia(data);
-        } else {
-          // Fallback if empty
-          setHeroMedia([{ id: 'default', type: 'image', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=90' }]);
+          setCachedData('hero_media', data);
         }
       } catch (error) {
-        setHeroMedia([{ id: 'default', type: 'image', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=90' }]);
+        console.warn('Hero media fetch error:', error);
       }
     };
     loadMedia();

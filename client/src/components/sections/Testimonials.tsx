@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchTestimonials, submitPublicTestimonial } from '../../lib/api';
+import { fetchTestimonials, submitPublicTestimonial, fetchStory, getCachedData, setCachedData } from '../../lib/api';
+import { testimonials as initialTestimonials } from '../../data/experiences';
 import toast from 'react-hot-toast';
 
 export default function Testimonials() {
   const [current, setCurrent] = useState(0);
-  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>(() => getCachedData('testimonials', initialTestimonials));
   const [story, setStory] = useState<any>(null);
   
   // Review Modal State
@@ -14,14 +15,16 @@ export default function Testimonials() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchTestimonials().then(setTestimonials).catch(console.error);
+    fetchTestimonials().then((data) => {
+      if (data && data.length > 0) {
+        setTestimonials(data);
+        setCachedData('testimonials', data);
+      }
+    }).catch(console.error);
     
-    // Import fetchStory at the top! Wait, I need to check if fetchStory is imported.
-    import('../../lib/api').then(api => {
-      api.fetchStory().then((res) => {
-        if (res && res.data) setStory(res.data);
-      }).catch(console.error);
-    });
+    fetchStory().then((res) => {
+      if (res && res.data) setStory(res.data);
+    }).catch(console.error);
   }, []);
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
@@ -112,7 +115,7 @@ export default function Testimonials() {
 
                   {/* Review */}
                   <blockquote className="font-display text-xl md:text-2xl text-cream/90 italic leading-relaxed mb-8">
-                    "{t.content}"
+                    "{t.content || t.review}"
                   </blockquote>
 
                   {/* Author */}
@@ -122,7 +125,7 @@ export default function Testimonials() {
                     </div>
                     <div className="text-left">
                       <div className="font-body font-semibold text-cream">{t.name}</div>
-                      <div className="font-body text-xs text-cream/50">{t.role}</div>
+                      <div className="font-body text-xs text-cream/50">{t.role || t.location || t.stayType}</div>
                     </div>
                   </div>
                 </>

@@ -271,4 +271,30 @@ export const formatWhatsAppNumber = (phone?: string): string => {
   return cleaned || '919511896490';
 };
 
+// LocalStorage Stale-While-Revalidate Caching Helper
+export const getCachedData = <T>(key: string, fallback: T): T => {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const item = localStorage.getItem(`belmirah_cache_${key}`);
+    if (item) {
+      const parsed = JSON.parse(item);
+      if (Array.isArray(fallback) ? Array.isArray(parsed) && parsed.length > 0 : !!parsed) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    // ignore json or storage errors
+  }
+  return fallback;
+};
+
+export const setCachedData = (key: string, data: any): void => {
+  if (typeof window === 'undefined' || !data) return;
+  try {
+    localStorage.setItem(`belmirah_cache_${key}`, JSON.stringify(data));
+  } catch (e) {
+    // ignore quota exceeded or storage disabled
+  }
+};
+
 export default api;

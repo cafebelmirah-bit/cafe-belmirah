@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchMenu } from '../../lib/api';
+import { fetchMenu, getCachedData, setCachedData } from '../../lib/api';
+import { menuItems as initialMenuItems } from '../../data/menu';
 import { useSiteContent } from '../../context/SiteContentContext';
 
 // Steam animation overlay
@@ -94,11 +95,16 @@ function MenuCard({ item, index }: { item: any; index: number }) {
 
 export default function ContinentalCafe() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [menuItems, setMenuItems] = useState<any[]>(() => getCachedData('menu_items', initialMenuItems));
   const { content } = useSiteContent();
 
   useEffect(() => {
-    fetchMenu().then(setMenuItems).catch(console.error);
+    fetchMenu().then((data) => {
+      if (data && data.length > 0) {
+        setMenuItems(data);
+        setCachedData('menu_items', data);
+      }
+    }).catch(console.error);
   }, []);
 
   const filtered = activeCategory === 'all'

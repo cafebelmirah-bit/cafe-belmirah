@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchGallery } from '../../lib/api';
-
+import { fetchGallery, getCachedData, setCachedData } from '../../lib/api';
+import { galleryImages as initialGalleryImages } from '../../data/experiences';
 
 function Lightbox({ image, onClose }: { image: any; onClose: () => void }) {
   return (
@@ -21,12 +21,12 @@ function Lightbox({ image, onClose }: { image: any; onClose: () => void }) {
         onClick={e => e.stopPropagation()}
       >
         <img
-          src={image.url?.replace('w=800', 'w=1400')}
-          alt={image.title}
+          src={(image.url || image.src)?.replace('w=800', 'w=1400')}
+          alt={image.title || image.alt}
           className="w-full h-full object-contain max-h-[85vh]"
         />
         <div className="absolute bottom-0 left-0 right-0 glass-dark p-4">
-          <p className="text-cream/70 text-sm">{image.title}</p>
+          <p className="text-cream/70 text-sm">{image.title || image.alt}</p>
         </div>
         <button
           className="absolute top-4 right-4 glass w-10 h-10 flex items-center justify-center text-cream hover:text-gold transition-colors"
@@ -42,10 +42,15 @@ function Lightbox({ image, onClose }: { image: any; onClose: () => void }) {
 export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [lightboxImage, setLightboxImage] = useState<any | null>(null);
-  const [galleryImages, setGalleryImages] = useState<any[]>([]);
+  const [galleryImages, setGalleryImages] = useState<any[]>(() => getCachedData('gallery_images', initialGalleryImages));
 
   useEffect(() => {
-    fetchGallery().then(setGalleryImages).catch(console.error);
+    fetchGallery().then((data) => {
+      if (data && data.length > 0) {
+        setGalleryImages(data);
+        setCachedData('gallery_images', data);
+      }
+    }).catch(console.error);
   }, []);
 
   const filtered = activeCategory === 'all'
@@ -118,8 +123,8 @@ export default function Gallery() {
                   onClick={() => setLightboxImage(img)}
                 >
                   <img
-                    src={img.url}
-                    alt={img.title}
+                    src={img.url || img.src}
+                    alt={img.title || img.alt}
                     className="w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
                     style={{ display: 'block' }}
@@ -128,7 +133,7 @@ export default function Gallery() {
                   <div className="absolute inset-0 bg-dark/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="text-center">
                       <div className="text-gold text-3xl mb-2">⊕</div>
-                      <p className="text-cream text-xs tracking-wider">{img.title}</p>
+                      <p className="text-cream text-xs tracking-wider">{img.title || img.alt}</p>
                     </div>
                   </div>
                   {/* Gold border */}

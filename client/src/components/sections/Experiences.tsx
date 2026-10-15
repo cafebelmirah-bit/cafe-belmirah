@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { fetchExperiences } from '../../lib/api';
+import { fetchExperiences, getCachedData, setCachedData } from '../../lib/api';
+import { experiences as initialExperiences } from '../../data/experiences';
 
 const categoryColors: Record<string, string> = {
   Evening: 'text-gold border-gold/30 bg-gold/10',
@@ -121,10 +122,15 @@ function ExperienceCard({ exp, index }: { exp: any; index: number }) {
 }
 
 export default function Experiences() {
-  const [experiences, setExperiences] = useState<any[]>([]);
+  const [experiences, setExperiences] = useState<any[]>(() => getCachedData('experiences', initialExperiences));
 
   useEffect(() => {
-    fetchExperiences().then(setExperiences).catch(console.error);
+    fetchExperiences().then((data) => {
+      if (data && data.length > 0) {
+        setExperiences(data);
+        setCachedData('experiences', data);
+      }
+    }).catch(console.error);
   }, []);
 
   const safeExps = experiences || [];

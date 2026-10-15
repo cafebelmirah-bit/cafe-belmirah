@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { fetchStory } from '../../lib/api';
+import { fetchStory, getCachedData, setCachedData } from '../../lib/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -30,12 +30,13 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
 }
 
 export default function About() {
-  const [story, setStory] = useState<any>(null);
+  const [story, setStory] = useState<any>(() => getCachedData('story_data', null));
 
   useEffect(() => {
     fetchStory().then((res) => {
       if (res && res.data) {
         setStory(res.data);
+        setCachedData('story_data', res.data);
       }
     }).catch(console.error);
   }, []);
